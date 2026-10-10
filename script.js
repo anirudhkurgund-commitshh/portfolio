@@ -10,32 +10,40 @@
   var isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
   /* ----------------------------------------------------------
-     1. CUSTOM CURSOR — magical glowing dot with aurora ring
+     1. CUSTOM CURSOR — clean minimal dot + ring
   ---------------------------------------------------------- */
   var cursorDot  = document.getElementById('cursorDot');
   var cursorRing = document.getElementById('cursorRing');
 
   if (!isTouchDevice && cursorDot && cursorRing) {
-    var dotX = 0, dotY = 0, ringX = 0, ringY = 0, mouseX = 0, mouseY = 0;
+    var mouseX = 0, mouseY = 0;
+    var ringX = 0, ringY = 0;
+    var LERP = 0.12;
 
     document.addEventListener('mousemove', function (e) {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      dotX = mouseX;
-      dotY = mouseY;
-      cursorDot.style.transform = 'translate(' + (dotX - 5) + 'px, ' + (dotY - 5) + 'px)';
+      /* Dot follows instantly */
+      cursorDot.style.transform = 'translate(' + (mouseX - 3) + 'px, ' + (mouseY - 3) + 'px)';
     });
 
     (function animateCursor() {
-      ringX += (mouseX - ringX) * 0.1;
-      ringY += (mouseY - ringY) * 0.1;
-      cursorRing.style.transform = 'translate(' + (ringX - 22) + 'px, ' + (ringY - 22) + 'px)';
+      /* Ring lags behind with lerp */
+      ringX += (mouseX - ringX) * LERP;
+      ringY += (mouseY - ringY) * LERP;
+      cursorRing.style.transform = 'translate(' + (ringX - 15) + 'px, ' + (ringY - 15) + 'px)';
       requestAnimationFrame(animateCursor);
     }());
 
     document.querySelectorAll('a, button, .project-card').forEach(function (el) {
-      el.addEventListener('mouseenter', function () { cursorRing.classList.add('hover'); });
-      el.addEventListener('mouseleave', function () { cursorRing.classList.remove('hover'); });
+      el.addEventListener('mouseenter', function () {
+        cursorRing.classList.add('hover');
+        cursorDot.classList.add('hover');
+      });
+      el.addEventListener('mouseleave', function () {
+        cursorRing.classList.remove('hover');
+        cursorDot.classList.remove('hover');
+      });
     });
   }
 
@@ -131,6 +139,69 @@
     var stars = new THREE.Points(geo, mat);
     scene.add(stars);
 
+    /* ---- Lights for planets ---- */
+    var ambientLight = new THREE.AmbientLight(0x222244, 2);
+    scene.add(ambientLight);
+    var pointLight = new THREE.PointLight(0xffffff, 1.5, 800);
+    pointLight.position.set(200, 150, 100);
+    scene.add(pointLight);
+
+    /* ---- Planet 1: Purple/blue, left side, with ring ---- */
+    var planet1Geo = new THREE.SphereGeometry(2, 32, 32);
+    var planet1Mat = new THREE.MeshPhongMaterial({
+      color: 0x6b3fa0,
+      emissive: 0x2a1040,
+      emissiveIntensity: 0.4,
+      shininess: 30
+    });
+    var planet1 = new THREE.Mesh(planet1Geo, planet1Mat);
+    planet1.position.set(-55, 8, -100);
+    scene.add(planet1);
+
+    /* Ring around planet 1 */
+    var ringGeo = new THREE.TorusGeometry(3.5, 0.35, 8, 64);
+    var ringMat = new THREE.MeshPhongMaterial({
+      color: 0x8855bb,
+      emissive: 0x331166,
+      emissiveIntensity: 0.3,
+      transparent: true,
+      opacity: 0.75,
+      side: THREE.DoubleSide
+    });
+    var planet1Ring = new THREE.Mesh(ringGeo, ringMat);
+    planet1Ring.rotation.x = Math.PI * 0.38;
+    planet1Ring.rotation.y = 0.3;
+    planet1.add(planet1Ring);
+
+    /* ---- Planet 2: Orange-brown, right side ---- */
+    var planet2Geo = new THREE.SphereGeometry(1.2, 32, 32);
+    var planet2Mat = new THREE.MeshPhongMaterial({
+      color: 0xc4713a,
+      emissive: 0x4a2010,
+      emissiveIntensity: 0.3,
+      shininess: 20
+    });
+    var planet2 = new THREE.Mesh(planet2Geo, planet2Mat);
+    planet2.position.set(52, -14, -90);
+    scene.add(planet2);
+
+    /* ---- Planet 3: Icy blue, top right ---- */
+    var planet3Geo = new THREE.SphereGeometry(0.65, 24, 24);
+    var planet3Mat = new THREE.MeshPhongMaterial({
+      color: 0xa0d8ef,
+      emissive: 0x204458,
+      emissiveIntensity: 0.5,
+      shininess: 60
+    });
+    var planet3 = new THREE.Mesh(planet3Geo, planet3Mat);
+    planet3.position.set(40, 22, -110);
+    scene.add(planet3);
+
+    /* Slow drift for planet 3 */
+    var p3DriftAngle = 0;
+    var p3BaseX = 40;
+    var p3BaseY = 22;
+
     /* ---- Mouse parallax ---- */
     var targetCamX = 0, targetCamY = 0;
     var curCamX = 0, curCamY = 0;
@@ -180,6 +251,25 @@
       }
       geo.attributes.position.needsUpdate = true;
       geo.attributes.size.needsUpdate = true;
+
+      /* Rotate planets */
+      if (typeof planet1 !== 'undefined') {
+        planet1.rotation.y += 0.001;
+        /* Subtle mouse parallax for planets (0.02 factor) */
+        planet1.position.x = -55 + (targetCamX * 0.02);
+        planet1.position.y = 8 + (targetCamY * 0.02);
+      }
+      if (typeof planet2 !== 'undefined') {
+        planet2.rotation.y += 0.001;
+        planet2.position.x = 52 + (targetCamX * 0.02);
+        planet2.position.y = -14 + (targetCamY * 0.02);
+      }
+      if (typeof planet3 !== 'undefined') {
+        planet3.rotation.y += 0.0005;
+        p3DriftAngle += 0.0008;
+        planet3.position.x = p3BaseX + Math.sin(p3DriftAngle) * 1.5 + (targetCamX * 0.02);
+        planet3.position.y = p3BaseY + Math.cos(p3DriftAngle * 0.7) * 1.0 + (targetCamY * 0.02);
+      }
 
       renderer.render(scene, camera);
     }
@@ -417,19 +507,5 @@
     }, { passive: true });
   }
 
-  /* ----------------------------------------------------------
-     5. SOUND TOGGLE (UI only)
-  ---------------------------------------------------------- */
-  var soundBtn = document.getElementById('soundToggle');
-  if (soundBtn) {
-    var muted = true;
-    soundBtn.addEventListener('click', function () {
-      muted = !muted;
-      soundBtn.classList.toggle('muted', muted);
-      soundBtn.setAttribute('aria-label', muted ? 'Enable ambient sound' : 'Disable ambient sound');
-      soundBtn.textContent = muted ? '♪' : '♫';
-    });
-    soundBtn.classList.add('muted'); /* start muted */
-  }
 
 }());
