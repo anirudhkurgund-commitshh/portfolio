@@ -16,22 +16,42 @@
   var cursorRing = document.getElementById('cursorRing');
 
   if (!isTouchDevice && cursorDot && cursorRing) {
-    var mouseX = 0, mouseY = 0;
-    var ringX = 0, ringY = 0;
-    var LERP = 0.12;
+    var mouseX = -200;
+    var mouseY = -200;
+    var ringX  = -200;
+    var ringY  = -200;
+    var LERP   = 0.10;
+    var entered = false;
+
+    /* Hide both until mouse enters window */
+    cursorDot.style.opacity  = '0';
+    cursorRing.style.opacity = '0';
+
+    document.addEventListener('mouseenter', function () {
+      entered = true;
+      cursorDot.style.opacity  = '1';
+      cursorRing.style.opacity = '1';
+    });
 
     document.addEventListener('mousemove', function (e) {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      /* Dot follows instantly */
-      cursorDot.style.transform = 'translate(' + (mouseX - 3) + 'px, ' + (mouseY - 3) + 'px)';
+      if (!entered) {
+        ringX = mouseX;
+        ringY = mouseY;
+        entered = true;
+        cursorDot.style.opacity  = '1';
+        cursorRing.style.opacity = '1';
+      }
+      cursorDot.style.left = mouseX + 'px';
+      cursorDot.style.top  = mouseY + 'px';
     });
 
     (function animateCursor() {
-      /* Ring lags behind with lerp */
       ringX += (mouseX - ringX) * LERP;
       ringY += (mouseY - ringY) * LERP;
-      cursorRing.style.transform = 'translate(' + (ringX - 15) + 'px, ' + (ringY - 15) + 'px)';
+      cursorRing.style.left = ringX + 'px';
+      cursorRing.style.top  = ringY + 'px';
       requestAnimationFrame(animateCursor);
     }());
 
@@ -48,243 +68,117 @@
   }
 
   /* ----------------------------------------------------------
-     2. THREE.JS — STAR WARP SYSTEM
+     2. CANVAS STAR WARP — stars fly toward viewer
   ---------------------------------------------------------- */
-  var canvas = document.getElementById('hero-canvas');
+  var svg = document.getElementById('star-svg');
 
-  if (canvas && typeof THREE !== 'undefined') {
-    var W = window.innerWidth;
-    var H = window.innerHeight;
+  /* Create canvas fixed to viewport, append to body */
+  var cvs = document.createElement('canvas');
+  cvs.id = 'hero-canvas';
+  cvs.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;display:block;pointer-events:none;';
+  document.body.insertBefore(cvs, document.body.firstChild);
 
-    var scene    = new THREE.Scene();
-    var camera   = new THREE.PerspectiveCamera(70, W / H, 0.01, 2000);
-    camera.position.z = 600;
+  /* Remove the svg placeholder */
+  if (svg) svg.parentNode.removeChild(svg);
 
-    var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: false });
-    renderer.setSize(W, H);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x000000, 0);
+  if (cvs) {
 
-    /* ---- Star field geometry ---- */
-    var STAR_COUNT = 3500;
-    var positions  = new Float32Array(STAR_COUNT * 3);
-    var colors     = new Float32Array(STAR_COUNT * 3);
-    var sizes      = new Float32Array(STAR_COUNT);
-    var speeds     = new Float32Array(STAR_COUNT); /* z-speed per star */
-    var opacities  = new Float32Array(STAR_COUNT);
-    var twinklePhases = new Float32Array(STAR_COUNT);
+    var ctx2 = cvs.getContext('2d');
+    var CW = cvs.width  = window.innerWidth;
+    var CH = cvs.height = window.innerHeight;
+    var CX = CW / 2, CY = CH / 2;
 
-    var starPalette = [
-      [1.0, 1.0, 1.0],          /* pure white */
-      [0.8, 0.878, 1.0],        /* blue-white */
-      [1.0, 0.957, 0.878],      /* warm white */
-      [0.9, 0.9, 1.0]           /* cool white */
-    ];
+    var NUM = 500;
+    var starArr = [];
 
-    for (var i = 0; i < STAR_COUNT; i++) {
-      var i3 = i * 3;
-      /* Random position in a deep tunnel volume */
-      positions[i3]     = (Math.random() - 0.5) * 1800; /* x spread */
-      positions[i3 + 1] = (Math.random() - 0.5) * 1800; /* y spread */
-      positions[i3 + 2] = (Math.random() * 1200) - 600; /* z: -600 to +600 */
-
-      /* Star color from palette */
-      var pIdx = Math.floor(Math.random() * starPalette.length);
-      colors[i3]     = starPalette[pIdx][0];
-      colors[i3 + 1] = starPalette[pIdx][1];
-      colors[i3 + 2] = starPalette[pIdx][2];
-
-      /* Varied sizes: most tiny, few large foreground stars */
-      var r = Math.random();
-      sizes[i] = r < 0.7 ? (Math.random() * 1.5 + 0.5)     /* small: 0.5-2 */
-               : r < 0.92 ? (Math.random() * 2.5 + 2)       /* medium: 2-4.5 */
-               :             (Math.random() * 3 + 4);         /* large: 4-7 */
-
-      /* Z-axis warp speed per star (slower by default) */
-      speeds[i] = Math.random() * 0.3 + 0.05;
-      opacities[i] = Math.random() * 0.4 + 0.6;
-      twinklePhases[i] = Math.random() * Math.PI * 2;
+    function makestar(i) {
+      var angle = Math.random() * Math.PI * 2;
+      var dist  = Math.random() * Math.max(CW, CH) * 0.6 + 10;
+      return {
+        x:     Math.cos(angle) * dist,
+        y:     Math.sin(angle) * dist,
+        z:     i / NUM,            /* 0 = close, 1 = far */
+        speed: Math.random() * 0.006 + 0.003,
+        size:  Math.random() * 1.4 + 0.3,
+        color: ['#ffffff','#cce0ff','#fff5e0','#e8f0ff'][Math.floor(Math.random()*4)]
+      };
     }
 
-    var geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute('color',    new THREE.BufferAttribute(colors,    3));
-    geo.setAttribute('size',     new THREE.BufferAttribute(sizes,     1));
+    for (var si = 0; si < NUM; si++) starArr.push(makestar(si));
 
-    /* Sprite texture — soft glowing circle */
-    var starCanvas = document.createElement('canvas');
-    starCanvas.width = 64;
-    starCanvas.height = 64;
-    var ctx = starCanvas.getContext('2d');
-    var gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    gradient.addColorStop(0,   'rgba(255,255,255,1)');
-    gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
-    gradient.addColorStop(0.5, 'rgba(200,220,255,0.3)');
-    gradient.addColorStop(1,   'rgba(0,0,0,0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 64, 64);
-    var starTex = new THREE.CanvasTexture(starCanvas);
-
-    var mat = new THREE.PointsMaterial({
-      size: 3,
-      map: starTex,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.9,
-      sizeAttenuation: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
+    /* Mouse for subtle parallax tilt */
+    var mx = 0, my = 0;
+    document.addEventListener('mousemove', function(e) {
+      mx = (e.clientX - CW * 0.5) / CW;
+      my = (e.clientY - CH * 0.5) / CH;
     });
 
-    var stars = new THREE.Points(geo, mat);
-    scene.add(stars);
+    /* Warp speed (driven by scroll) */
+    var warpLevel = 0;
+    window._setWarpSpeed = function(v) { warpLevel = v; };
 
-    /* ---- Lights for planets ---- */
-    var ambientLight = new THREE.AmbientLight(0x222244, 2);
-    scene.add(ambientLight);
-    var pointLight = new THREE.PointLight(0xffffff, 1.5, 800);
-    pointLight.position.set(200, 150, 100);
-    scene.add(pointLight);
+    function drawStars() {
+      requestAnimationFrame(drawStars);
 
-    /* ---- Planet 1: Purple/blue, left side, with ring ---- */
-    var planet1Geo = new THREE.SphereGeometry(2, 32, 32);
-    var planet1Mat = new THREE.MeshPhongMaterial({
-      color: 0x6b3fa0,
-      emissive: 0x2a1040,
-      emissiveIntensity: 0.4,
-      shininess: 30
-    });
-    var planet1 = new THREE.Mesh(planet1Geo, planet1Mat);
-    planet1.position.set(-55, 8, -100);
-    scene.add(planet1);
+      /* Fading trail — deeper black = longer trails */
+      ctx2.fillStyle = 'rgba(5,5,16,0.55)';
+      ctx2.fillRect(0, 0, CW, CH);
 
-    /* Ring around planet 1 */
-    var ringGeo = new THREE.TorusGeometry(3.5, 0.35, 8, 64);
-    var ringMat = new THREE.MeshPhongMaterial({
-      color: 0x8855bb,
-      emissive: 0x331166,
-      emissiveIntensity: 0.3,
-      transparent: true,
-      opacity: 0.75,
-      side: THREE.DoubleSide
-    });
-    var planet1Ring = new THREE.Mesh(ringGeo, ringMat);
-    planet1Ring.rotation.x = Math.PI * 0.38;
-    planet1Ring.rotation.y = 0.3;
-    planet1.add(planet1Ring);
+      var speed = 0.0015 + warpLevel * 0.006;
 
-    /* ---- Planet 2: Orange-brown, right side ---- */
-    var planet2Geo = new THREE.SphereGeometry(1.2, 32, 32);
-    var planet2Mat = new THREE.MeshPhongMaterial({
-      color: 0xc4713a,
-      emissive: 0x4a2010,
-      emissiveIntensity: 0.3,
-      shininess: 20
-    });
-    var planet2 = new THREE.Mesh(planet2Geo, planet2Mat);
-    planet2.position.set(52, -14, -90);
-    scene.add(planet2);
+      for (var k = 0; k < NUM; k++) {
+        var s = starArr[k];
+        s.z -= speed;
 
-    /* ---- Planet 3: Icy blue, top right ---- */
-    var planet3Geo = new THREE.SphereGeometry(0.65, 24, 24);
-    var planet3Mat = new THREE.MeshPhongMaterial({
-      color: 0xa0d8ef,
-      emissive: 0x204458,
-      emissiveIntensity: 0.5,
-      shininess: 60
-    });
-    var planet3 = new THREE.Mesh(planet3Geo, planet3Mat);
-    planet3.position.set(40, 22, -110);
-    scene.add(planet3);
-
-    /* Slow drift for planet 3 */
-    var p3DriftAngle = 0;
-    var p3BaseX = 40;
-    var p3BaseY = 22;
-
-    /* ---- Mouse parallax ---- */
-    var targetCamX = 0, targetCamY = 0;
-    var curCamX = 0, curCamY = 0;
-
-    document.addEventListener('mousemove', function (e) {
-      targetCamX =  (e.clientX / W - 0.5) * 60;
-      targetCamY = -(e.clientY / H - 0.5) * 60;
-    });
-
-    /* ---- Warp speed state ---- */
-    var warpSpeed = 0;     /* 0 = calm drift, 1 = full warp */
-    var baseSpeed = 0.4;   /* calm Z drift speed multiplier */
-    var clock     = 0;
-
-    /* ---- Animation loop ---- */
-    function animateStars() {
-      requestAnimationFrame(animateStars);
-      clock += 0.016;
-
-      /* Lerp camera for parallax */
-      curCamX += (targetCamX - curCamX) * 0.04;
-      curCamY += (targetCamY - curCamY) * 0.04;
-      camera.position.x = curCamX;
-      camera.position.y = curCamY;
-
-      /* Current effective speed */
-      var effectiveSpeed = baseSpeed + warpSpeed * 8;
-
-      /* Move each star along Z toward camera */
-      var posArr = geo.attributes.position.array;
-      for (var j = 0; j < STAR_COUNT; j++) {
-        var j3 = j * 3;
-        posArr[j3 + 2] += speeds[j] * effectiveSpeed;
-
-        /* Twinkle: modulate size attribute for some stars */
-        if (j % 4 === 0) {
-          var twinkle = 0.7 + 0.3 * Math.sin(clock * 2.5 + twinklePhases[j]);
-          geo.attributes.size.array[j] = sizes[j] * twinkle;
+        if (s.z <= 0) {
+          /* Reset to far distance */
+          var ang = Math.random() * Math.PI * 2;
+          var d   = Math.random() * Math.max(CW, CH) * 0.6 + 10;
+          s.x = Math.cos(ang) * d;
+          s.y = Math.sin(ang) * d;
+          s.z = 1;
+          continue;
         }
 
-        /* Wrap star back to far end when it passes camera */
-        if (posArr[j3 + 2] > camera.position.z + 100) {
-          posArr[j3]     = (Math.random() - 0.5) * 1800;
-          posArr[j3 + 1] = (Math.random() - 0.5) * 1800;
-          posArr[j3 + 2] = camera.position.z - 600;
+        /* Project 3D to 2D */
+        var px = CX + s.x / s.z + mx * 18;
+        var py = CY + s.y / s.z + my * 18;
+
+        /* Previous position for streak */
+        var pz_prev = s.z + speed;
+        var ppx = CX + s.x / pz_prev + mx * 18;
+        var ppy = CY + s.y / pz_prev + my * 18;
+
+        /* Size grows as star gets closer */
+        var r = s.size * (1 - s.z) * 2.5;
+        var op = Math.min(1, (1 - s.z) * 1.8);
+
+        /* Draw streak line */
+        if (warpLevel > 0.1 || s.z < 0.5) {
+          ctx2.beginPath();
+          ctx2.moveTo(ppx, ppy);
+          ctx2.lineTo(px, py);
+          ctx2.strokeStyle = s.color.replace(')', ',' + (op * 0.7) + ')').replace('rgb', 'rgba').replace('#ffffff', 'rgba(255,255,255,' + (op*0.7) + ')').replace('#cce0ff', 'rgba(204,224,255,' + (op*0.7) + ')').replace('#fff5e0', 'rgba(255,245,224,' + (op*0.7) + ')').replace('#e8f0ff', 'rgba(232,240,255,' + (op*0.7) + ')');
+          ctx2.lineWidth = r * 0.6;
+          ctx2.stroke();
         }
-      }
-      geo.attributes.position.needsUpdate = true;
-      geo.attributes.size.needsUpdate = true;
 
-      /* Rotate planets */
-      if (typeof planet1 !== 'undefined') {
-        planet1.rotation.y += 0.001;
-        /* Subtle mouse parallax for planets (0.02 factor) */
-        planet1.position.x = -55 + (targetCamX * 0.02);
-        planet1.position.y = 8 + (targetCamY * 0.02);
+        /* Draw star dot */
+        ctx2.beginPath();
+        ctx2.arc(px, py, Math.max(0.3, r), 0, Math.PI * 2);
+        ctx2.fillStyle = s.color;
+        ctx2.globalAlpha = op;
+        ctx2.fill();
+        ctx2.globalAlpha = 1;
       }
-      if (typeof planet2 !== 'undefined') {
-        planet2.rotation.y += 0.001;
-        planet2.position.x = 52 + (targetCamX * 0.02);
-        planet2.position.y = -14 + (targetCamY * 0.02);
-      }
-      if (typeof planet3 !== 'undefined') {
-        planet3.rotation.y += 0.0005;
-        p3DriftAngle += 0.0008;
-        planet3.position.x = p3BaseX + Math.sin(p3DriftAngle) * 1.5 + (targetCamX * 0.02);
-        planet3.position.y = p3BaseY + Math.cos(p3DriftAngle * 0.7) * 1.0 + (targetCamY * 0.02);
-      }
-
-      renderer.render(scene, camera);
     }
-    animateStars();
 
-    /* Expose warpSpeed setter for scroll triggers */
-    window._setWarpSpeed = function (v) { warpSpeed = v; };
+    drawStars();
 
-    /* Resize */
-    window.addEventListener('resize', function () {
-      W = window.innerWidth;
-      H = window.innerHeight;
-      camera.aspect = W / H;
-      camera.updateProjectionMatrix();
-      renderer.setSize(W, H);
+    window.addEventListener('resize', function() {
+      CW = cvs.width  = window.innerWidth;
+      CH = cvs.height = window.innerHeight;
+      CX = CW / 2; CY = CH / 2;
     });
   }
 
@@ -305,6 +199,36 @@
       });
     }
 
+    /* ---- 3a2. Hero zoom-out on scroll (Lusion style) ---- */
+    var heroContent = document.querySelector('.hero-content');
+    if (heroContent) {
+      gsap.to(heroContent, {
+        scale: 1.18,
+        opacity: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '#hero',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true
+        }
+      });
+    }
+    /* Hero section itself scales up slightly as you leave */
+    var heroSection = document.getElementById('hero');
+    if (heroSection) {
+      gsap.to(heroSection, {
+        scale: 1.05,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '#hero',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true
+        }
+      });
+    }
+
     /* ---- 3b. Hero → About: warp burst on scroll ---- */
     var warpOverlay = document.getElementById('warpOverlay');
     ScrollTrigger.create({
@@ -315,7 +239,7 @@
       onUpdate: function (self) {
         var p = self.progress;
         /* Stars accelerate into warp then slow back down */
-        var warpP = Math.sin(p * Math.PI);  /* 0→1→0 bell curve */
+        var warpP = Math.sin(p * Math.PI) * 0.3;  /* max 0.3 — subtle acceleration only */
         if (window._setWarpSpeed) window._setWarpSpeed(warpP);
         /* Overlay flares at peak warp */
         if (warpOverlay) {

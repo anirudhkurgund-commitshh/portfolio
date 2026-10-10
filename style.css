@@ -5,7 +5,7 @@
   --bg:         #050510;
   --text:       #ffffff;
   --accent:     #a78bfa;
-  --card:       #0d0d1a;
+  --card:       #2727c0;
   --star-white: #ffffff;
   --star-blue:  #cce0ff;
   --star-warm:  #fff5e0;
@@ -26,7 +26,7 @@ html {
 }
 
 body {
-  background: var(--bg);
+  background: #050510;
   color: var(--text);
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 400;
@@ -53,12 +53,10 @@ ul {
 .cursor-dot,
 .cursor-ring {
   position: fixed;
-  top: 0;
-  left: 0;
   pointer-events: none;
   z-index: 9999;
-  will-change: transform;
   border-radius: 50%;
+  will-change: left, top;
   transform: translate(-50%, -50%);
 }
 
@@ -151,17 +149,19 @@ ul {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  background: transparent;
 }
 
+#star-svg,
 #hero-canvas {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
   display: block;
+  pointer-events: none;
 }
 
 .hero-content {
@@ -228,6 +228,8 @@ ul {
    ============================================================ */
 section:not(.hero) {
   padding: 120px 10vw;
+  position: relative;
+  z-index: 1;
 }
 
 .section-title {
@@ -242,13 +244,44 @@ section:not(.hero) {
    ============================================================ */
 #about {
   position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+/* Glass blur box behind content in all non-hero sections */
+#about .about-inner,
+#work .work-grid,
+#skills .skills-grid,
+#contact .contact-inner {
+  position: relative;
+  background: rgba(5, 5, 16, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 56px;
+}
+
+#work .section-title,
+#skills .section-title {
+  position: relative;
+  z-index: 1;
 }
 
 .about-inner {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 80px;
-  align-items: start;
+  display: block;
+  max-width: 780px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.about-content h2 {
+  text-align: center;
+}
+
+.about-content p {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .about-number {
@@ -343,8 +376,15 @@ section:not(.hero) {
 .project-name {
   font-size: clamp(20px, 2vw, 26px);
   font-weight: 700;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   letter-spacing: -0.01em;
+}
+
+.project-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.6;
+  margin-bottom: 16px;
 }
 
 .project-tags {
