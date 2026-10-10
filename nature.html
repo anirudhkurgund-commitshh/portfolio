@@ -1,721 +1,1513 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Into the Wild</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      background: #000;
-      overflow-x: hidden;
-    }
-
-    /* =====================
-       SCROLL DRIVER
-    ===================== */
-    .scroll-driver {
-      height: 15000px;
-      width: 100%;
-      position: relative;
-      z-index: 0;
-    }
-
-    /* =====================
-       FIXED SCENE
-    ===================== */
-    .scene {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      z-index: 1;
-    }
-
-    /* =====================
-       PARALLAX LAYERS
-    ===================== */
-    .layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-size: cover;
-      background-position: center center;
-      background-repeat: no-repeat;
-      will-change: transform;
-    }
-
-    .layer-sky {
-      background-image: url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80');
-      background-position: center top;
-      z-index: 1;
-    }
-
-    .layer-jungle-far {
-      background-image: url('https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=1920&q=80');
-      z-index: 2;
-    }
-
-    .layer-jungle-mid {
-      background-image: url('https://images.unsplash.com/photo-1516912481808-3406841bd33c?auto=format&fit=crop&w=1920&q=80');
-      z-index: 3;
-    }
-
-    .layer-jungle-near {
-      background-image: url('https://images.unsplash.com/photo-1504567961542-e24d9439a724?auto=format&fit=crop&w=1920&q=80');
-      height: 60%;
-      top: auto;
-      bottom: 0;
-      z-index: 4;
-      background-position: center bottom;
-    }
-
-    .layer-ground {
-      background: linear-gradient(to top, #0a0a05 0%, #1a1f10 35%, transparent 100%);
-      height: 30%;
-      top: auto;
-      bottom: 0;
-      z-index: 5;
-    }
-
-    /* =====================
-       COLOR OVERLAY
-    ===================== */
-    .layer-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 6;
-      pointer-events: none;
-      background: rgba(135, 206, 235, 0.0);
-      mix-blend-mode: multiply;
-      transition: background 0.5s ease;
-    }
-
-    /* =====================
-       VIGNETTE
-    ===================== */
-    .layer-vignette {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 20;
-      pointer-events: none;
-      background: radial-gradient(ellipse at center,
-        transparent 40%,
-        rgba(0, 0, 0, 0.5) 75%,
-        rgba(0, 0, 0, 0.85) 100%
-      );
-    }
-
-    /* =====================
-       TRAIN
-    ===================== */
-    .layer-train {
-      position: absolute;
-      bottom: 15%;
-      left: 8%;
-      width: 380px;
-      height: auto;
-      z-index: 10;
-      pointer-events: none;
-      object-fit: contain;
-      animation: trainBob 1.5s ease-in-out infinite;
-      filter: drop-shadow(0 10px 30px rgba(0,0,0,0.7));
-    }
-
-    @keyframes trainBob {
-      0%   { transform: translateY(0px); }
-      50%  { transform: translateY(-8px); }
-      100% { transform: translateY(0px); }
-    }
-
-    /* =====================
-       SMOKE
-    ===================== */
-    .smoke-container {
-      position: absolute;
-      bottom: calc(15% + 200px);
-      left: calc(8% + 80px);
-      z-index: 11;
-      pointer-events: none;
-    }
-
-    .smoke {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(200, 200, 190, 0.5);
-      animation: smokeRise 2.5s ease-out infinite;
-    }
-
-    .smoke-1 {
-      width: 18px;
-      height: 18px;
-      left: 0;
-      animation-delay: 0s;
-    }
-
-    .smoke-2 {
-      width: 24px;
-      height: 24px;
-      left: 8px;
-      animation-delay: 0.8s;
-    }
-
-    .smoke-3 {
-      width: 14px;
-      height: 14px;
-      left: 4px;
-      animation-delay: 1.6s;
-    }
-
-    @keyframes smokeRise {
-      0% {
-        transform: translateY(0) scale(1);
-        opacity: 0.6;
-      }
-      50% {
-        transform: translateY(-40px) scale(1.8) translateX(10px);
-        opacity: 0.3;
-      }
-      100% {
-        transform: translateY(-90px) scale(3) translateX(20px);
-        opacity: 0;
-      }
-    }
-
-    /* =====================
-       ANIMALS
-    ===================== */
-    .animal {
-      position: absolute;
-      object-fit: contain;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.8s ease;
-      will-change: opacity;
-    }
-
-    .animal-deer {
-      bottom: 18%;
-      left: 3%;
-      width: 300px;
-      z-index: 9;
-      mix-blend-mode: multiply;
-    }
-
-    .animal-birds {
-      top: 12%;
-      left: 20%;
-      width: 500px;
-      z-index: 8;
-      mix-blend-mode: multiply;
-      animation: birdFly 8s linear infinite paused;
-    }
-
-    .animal-birds.visible {
-      animation-play-state: running;
-    }
-
-    @keyframes birdFly {
-      0%   { transform: translateX(0px); }
-      50%  { transform: translateX(60px); }
-      100% { transform: translateX(0px); }
-    }
-
-    .animal-elephant {
-      bottom: 10%;
-      right: 2%;
-      width: 400px;
-      z-index: 9;
-      mix-blend-mode: multiply;
-    }
-
-    .animal-tiger {
-      bottom: 12%;
-      left: 40%;
-      width: 350px;
-      z-index: 9;
-      mix-blend-mode: multiply;
-    }
-
-    .animal-fireflies {
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 12;
-      mix-blend-mode: screen;
-    }
-
-    .animal-owl {
-      top: 8%;
-      right: 5%;
-      width: 200px;
-      z-index: 9;
-      mix-blend-mode: multiply;
-    }
-
-    .animal-wolf {
-      bottom: 14%;
-      left: 4%;
-      width: 300px;
-      z-index: 9;
-      mix-blend-mode: multiply;
-    }
-
-    .animal-fox {
-      bottom: 12%;
-      right: 4%;
-      width: 250px;
-      z-index: 9;
-      mix-blend-mode: multiply;
-    }
-
-    /* =====================
-       TRACK LINES
-    ===================== */
-    .tracks {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      z-index: 15;
-      pointer-events: none;
-    }
-
-    .rail {
-      height: 3px;
-      background: rgba(150, 120, 80, 0.6);
-      width: 100%;
-    }
-
-    .rail-top {
-      margin-bottom: 34px;
-    }
-
-    .sleepers {
-      height: 40px;
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: repeating-linear-gradient(
-        90deg,
-        transparent 0px,
-        transparent 50px,
-        rgba(120, 90, 60, 0.4) 50px,
-        rgba(120, 90, 60, 0.4) 80px
-      );
-    }
-
-    /* =====================
-       TEXT OVERLAYS
-    ===================== */
-    .text-overlay {
-      position: absolute;
-      z-index: 18;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.8s ease;
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: clamp(2rem, 5vw, 4rem);
-      color: #fff;
-      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
-      letter-spacing: 0.05em;
-      line-height: 1.2;
-      will-change: opacity;
-    }
-
-    .text-aboard {
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    .text-jungle {
-      top: 45%;
-      left: 6%;
-      text-align: left;
-      max-width: 50%;
-    }
-
-    .text-night {
-      top: 40%;
-      right: 6%;
-      text-align: right;
-      max-width: 50%;
-    }
-
-    .text-journey {
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      white-space: nowrap;
-      font-style: italic;
-    }
-
-    /* =====================
-       GRAIN TEXTURE
-    ===================== */
-    .grain-svg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 9999;
-      opacity: 0.04;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Into the Wild</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;background:#000;overflow-x:hidden;}
+canvas{position:fixed;top:0;left:0;width:100vw;height:100vh;display:block;z-index:1;}
+#scroll-driver{height:18000px;width:100%;position:relative;z-index:0;}
+</style>
 </head>
 <body>
+<canvas id="c"></canvas>
+<div id="scroll-driver"></div>
+<script>
+(function(){
+"use strict";
 
-  <!-- SCENE: fixed full-viewport -->
-  <div class="scene" id="scene">
+// ----- canvas setup -----
+var canvas = document.getElementById('c');
+var ctx    = canvas.getContext('2d');
 
-    <!-- PARALLAX LAYERS -->
-    <div class="layer layer-sky"         id="layerSky"></div>
-    <div class="layer layer-jungle-far"  id="layerJungleFar"></div>
-    <div class="layer layer-jungle-mid"  id="layerJungleMid"></div>
-    <div class="layer layer-jungle-near" id="layerJungleNear"></div>
-    <div class="layer layer-ground"      id="layerGround"></div>
+function resize(){
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
 
-    <!-- COLOR SHIFT OVERLAY -->
-    <div class="layer-overlay" id="colorOverlay"></div>
+// ----- scroll -----
+var targetScroll  = 0;
+var currentScroll = 0;
+var maxScroll     = 18000 - window.innerHeight;
+window.addEventListener('scroll', function(){ targetScroll = window.scrollY; });
+window.addEventListener('resize', function(){ maxScroll = 18000 - window.innerHeight; });
 
-    <!-- TRAIN -->
-    <img
-      class="layer-train"
-      src="https://images.unsplash.com/photo-1474487548417-781cb6d646b4?auto=format&fit=crop&w=800&q=80"
-      alt="Vintage train through forest"
-      loading="lazy"
-      onerror="this.style.display='none'"
-    />
+// ----- time -----
+var animTime = 0;
 
-    <!-- SMOKE -->
-    <div class="smoke-container" id="smokeContainer">
-      <div class="smoke smoke-1"></div>
-      <div class="smoke smoke-2"></div>
-      <div class="smoke smoke-3"></div>
-    </div>
+// ----- helpers -----
+function clamp(v,a,b){ return v<a?a:v>b?b:v; }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function smoothstep(edge0,edge1,x){
+  var t=clamp((x-edge0)/(edge1-edge0),0,1);
+  return t*t*(3-2*t);
+}
+// progress within a sub-range, clamped 0-1
+function sub(p,a,b){ return clamp((p-a)/(b-a),0,1); }
+// bell curve opacity
+function bell(p,a,b,c,d){
+  if(p<a||p>d) return 0;
+  if(p<b) return (p-a)/(b-a);
+  if(p<c) return 1;
+  return 1-(p-c)/(d-c);
+}
+function lerpRGB(c1,c2,t){
+  return [
+    Math.round(lerp(c1[0],c2[0],t)),
+    Math.round(lerp(c1[1],c2[1],t)),
+    Math.round(lerp(c1[2],c2[2],t))
+  ];
+}
+function rgbStr(c){ return 'rgb('+c[0]+','+c[1]+','+c[2]+')'; }
+function rgbaStr(c,a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a.toFixed(3)+')'; }
 
-    <!-- ANIMALS -->
-    <img
-      id="animalDeer"
-      class="animal animal-deer"
-      src="https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=600&q=80"
-      alt="Deer in forest"
-      loading="lazy"
-      onerror="this.style.display='none'"
-    />
+// ----- seeded pseudo-random -----
+function seededRand(seed){
+  var x = Math.sin(seed+1)*43758.5453123;
+  return x - Math.floor(x);
+}
 
-    <img
-      id="animalBirds"
-      class="animal animal-birds"
-      src="https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&w=1000&q=80"
-      alt="Birds in flight"
-      loading="lazy"
-      onerror="this.style.display='none'"
-    />
+// =============================================
+// INIT - generate all static data once
+// =============================================
 
-    <img
-      id="animalElephant"
-      class="animal animal-elephant"
-      src="https://images.unsplash.com/photo-1564760055775-d63b17a55c44?auto=format&fit=crop&w=800&q=80"
-      alt="Elephant in the wild"
-      loading="lazy"
-      onerror="this.style.display='none'"
-    />
+// Stars: 200 fixed positions
+var stars = [];
+for(var i=0;i<200;i++){
+  stars.push({
+    x: seededRand(i*3+0),
+    y: seededRand(i*3+1)*0.75,
+    r: 0.5 + seededRand(i*3+2)*1.5,
+    speed: 0.5 + seededRand(i*7+3)*2.5,
+    phase: seededRand(i*5+4)*Math.PI*2,
+    glow: seededRand(i*9+5)>0.8
+  });
+}
 
-    <img
-      id="animalTiger"
-      class="animal animal-tiger"
-      src="https://images.unsplash.com/photo-1549480017-d76466a4b7e8?auto=format&fit=crop&w=700&q=80"
-      alt="Tiger in jungle"
-      loading="lazy"
-      onerror="this.style.display='none'"
-    />
-
-    <img
-      id="animalFireflies"
-      class="animal animal-fireflies"
-      src="https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?auto=format&fit=crop&w=1920&q=80"
-      alt="Fireflies bokeh"
-      loading="lazy"
-      onerror="this.style.display='none'"
-    />
-
-    <img
-      id="animalOwl"
-      class="animal animal-owl"
-      src="https://images.unsplash.com/photo-1543549790-8b5f4a028cfb?auto=format&fit=crop&w=400&q=80"
-      alt="Owl on branch"
-      loading="lazy"
-      onerror="this.style.display='none'"
-    />
-
-    <img
-      id="animalWolf"
-      class="animal animal-wolf"
-      src="https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=600&q=80"
-      alt="Wolf in the wild"
-      loading="lazy"
-      onerror="this.style.display='none'"
-    />
-
-    <img
-      id="animalFox"
-      class="animal animal-fox"
-      src="https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=500&q=80"
-      alt="Fox in forest"
-      loading="lazy"
-      onerror="this.style.display='none'"
-    />
-
-    <!-- TEXT OVERLAYS -->
-    <div class="text-overlay text-aboard"  id="textAboard">All aboard.</div>
-    <div class="text-overlay text-jungle"  id="textJungle">The jungle breathes.</div>
-    <div class="text-overlay text-night"   id="textNight">Night falls slowly.</div>
-    <div class="text-overlay text-journey" id="textJourney">Some journeys never end.</div>
-
-    <!-- VIGNETTE (always on top of scene content) -->
-    <div class="layer-vignette"></div>
-
-  </div>
-
-  <!-- TRACK LINES (outside scene so they sit above) -->
-  <!-- Railroad track background reference photo (preloaded, hidden) -->
-  <img
-    src="https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1920&q=80"
-    alt="Railroad through jungle"
-    loading="lazy"
-    onerror="this.style.display='none'"
-    style="display:none;"
-  />
-  <div class="tracks">
-    <div class="sleepers"></div>
-    <div class="rail rail-bottom"></div>
-    <div style="height:34px;"></div>
-    <div class="rail rail-top"></div>
-  </div>
-
-  <!-- SCROLL DRIVER -->
-  <div class="scroll-driver" id="scrollDriver"></div>
-
-  <!-- GRAIN TEXTURE -->
-  <svg class="grain-svg" xmlns="http://www.w3.org/2000/svg">
-    <filter id="grain">
-      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
-      <feColorMatrix type="saturate" values="0"/>
-    </filter>
-    <rect width="100%" height="100%" filter="url(#grain)"/>
-  </svg>
-
-  <script>
-    // =====================
-    // ELEMENT REFERENCES
-    // =====================
-    var layerSky        = document.getElementById('layerSky');
-    var layerJungleFar  = document.getElementById('layerJungleFar');
-    var layerJungleMid  = document.getElementById('layerJungleMid');
-    var layerJungleNear = document.getElementById('layerJungleNear');
-    var layerGround     = document.getElementById('layerGround');
-    var colorOverlay    = document.getElementById('colorOverlay');
-
-    var animalDeer      = document.getElementById('animalDeer');
-    var animalBirds     = document.getElementById('animalBirds');
-    var animalElephant  = document.getElementById('animalElephant');
-    var animalTiger     = document.getElementById('animalTiger');
-    var animalFireflies = document.getElementById('animalFireflies');
-    var animalOwl       = document.getElementById('animalOwl');
-    var animalWolf      = document.getElementById('animalWolf');
-    var animalFox       = document.getElementById('animalFox');
-
-    var textAboard  = document.getElementById('textAboard');
-    var textJungle  = document.getElementById('textJungle');
-    var textNight   = document.getElementById('textNight');
-    var textJourney = document.getElementById('textJourney');
-
-    // =====================
-    // SCROLL STATE
-    // =====================
-    var targetScroll  = 0;
-    var currentScroll = 0;
-
-    window.addEventListener('scroll', function() {
-      targetScroll = window.scrollY;
+// Clouds: 8 clouds, each with sub-circles
+var clouds = [];
+for(var i=0;i<8;i++){
+  var cx = seededRand(i*11+0)*4000+200;
+  var cy = 60 + seededRand(i*11+1)*180;
+  var blobs = [];
+  var nb = 5+Math.floor(seededRand(i*11+2)*3);
+  for(var j=0;j<nb;j++){
+    blobs.push({
+      dx: (seededRand(i*11+j*3+10)-0.5)*130,
+      dy: (seededRand(i*11+j*3+11)-0.5)*50,
+      r:  40+seededRand(i*11+j*3+12)*70
     });
+  }
+  clouds.push({ cx:cx, cy:cy, blobs:blobs, speed:0.15+seededRand(i*11+6)*0.25 });
+}
 
-    // =====================
-    // HELPERS
-    // =====================
-    function clamp(val, min, max) {
-      return Math.min(Math.max(val, min), max);
+// Mid jungle trees: 40 trees
+var midTrees = [];
+for(var i=0;i<40;i++){
+  var tx = 100 + i*(16200/40) + (seededRand(i*7+0)-0.5)*200;
+  var th = 150 + seededRand(i*7+1)*130;
+  var tw = 18 + seededRand(i*7+2)*14;
+  midTrees.push({
+    x: tx,
+    h: th,
+    trunkW: tw,
+    layers: 3+Math.floor(seededRand(i*7+3)*2),
+    canopyW: 60+seededRand(i*7+4)*80,
+    canopyH: 40+seededRand(i*7+5)*60,
+    vine: seededRand(i*7+6)>0.55
+  });
+}
+
+// Foreground trees: 18 big trunks
+var fgTrees = [];
+for(var i=0;i<18;i++){
+  var tx = 50 + i*(16200/18) + (seededRand(i*13+0)-0.5)*150;
+  var tw = 40 + seededRand(i*13+1)*60;
+  fgTrees.push({
+    x: tx,
+    w: tw,
+    stripes: Math.floor(6+seededRand(i*13+2)*10)
+  });
+}
+
+// Ground grass blades: pre-compute positions
+var grassBlades = [];
+for(var i=0;i<600;i++){
+  grassBlades.push({
+    x: seededRand(i*5+0)*16500,
+    h: 5+seededRand(i*5+1)*12,
+    color: [
+      Math.floor(seededRand(i*5+2)*3),
+      (seededRand(i*5+3)-0.5)*0.2
+    ]
+  });
+}
+var grassColors = ['#4a7a2a','#3d6622','#5a8a2a'];
+
+// Ground rocks
+var rocks = [];
+for(var i=0;i<80;i++){
+  var rpts = [];
+  var n = 5+Math.floor(seededRand(i*17+0)*4);
+  var rx = seededRand(i*17+1)*16500;
+  var rw = 10+seededRand(i*17+2)*40;
+  var rh = 6+seededRand(i*17+3)*20;
+  for(var j=0;j<n;j++){
+    var ang = (j/n)*Math.PI*2;
+    var pr = 0.7+seededRand(i*17+j+4)*0.3;
+    rpts.push([Math.cos(ang)*rw*pr, Math.sin(ang)*rh*pr]);
+  }
+  rocks.push({ x:rx, pts:rpts, g: seededRand(i*17+9) });
+}
+
+// Leaf litter
+var leaves = [];
+for(var i=0;i<200;i++){
+  leaves.push({
+    x: seededRand(i*9+0)*16500,
+    dx: (seededRand(i*9+1)-0.5)*30,
+    dy: (seededRand(i*9+2)-0.5)*10,
+    w: 4+seededRand(i*9+3)*10,
+    h: 2+seededRand(i*9+4)*5,
+    col: seededRand(i*9+5)>0.5 ? '#3a2008':'#5a3010'
+  });
+}
+
+// Rain drops
+var rainDrops = [];
+for(var i=0;i<150;i++){
+  rainDrops.push({
+    x: seededRand(i*11+0)*2000,
+    y: seededRand(i*11+1)*900
+  });
+}
+
+// Smoke particles for train
+var smokeParticles = [];
+for(var i=0;i<15;i++){
+  smokeParticles.push({ x:0, y:0, vx:0, vy:0, opacity:0, size:0, age:0 });
+}
+
+// Fireflies
+var fireflies = [];
+for(var i=0;i<25;i++){
+  fireflies.push({
+    bx: seededRand(i*13+0)*16000,
+    by: 0.2+seededRand(i*13+1)*0.55,
+    fx: seededRand(i*13+2)*Math.PI*2,
+    fy: seededRand(i*13+3)*Math.PI*2,
+    fr: 0.4+seededRand(i*13+4)*0.8,
+    blinkSpeed: 0.8+seededRand(i*13+5)*2.5,
+    blinkPhase: seededRand(i*13+6)*Math.PI*2
+  });
+}
+
+// Bird flock (12 birds)
+var birds = [];
+for(var i=0;i<12;i++){
+  birds.push({
+    ox: (seededRand(i*7+0)-0.5)*300,
+    oy: (seededRand(i*7+1)-0.5)*120,
+    phase: seededRand(i*7+2)*Math.PI*2,
+    size: 8+seededRand(i*7+3)*8
+  });
+}
+
+// Hill silhouette control points
+var hills = [
+  { color:'#233530', pts:[ [0,0.75],[0.12,0.52],[0.25,0.64],[0.4,0.48],[0.55,0.60],[0.7,0.45],[0.85,0.58],[1,0.72],[1,1],[0,1] ] },
+  { color:'#1b2e2a', pts:[ [0,0.82],[0.1,0.62],[0.2,0.55],[0.35,0.66],[0.5,0.50],[0.65,0.65],[0.8,0.54],[0.9,0.63],[1,0.80],[1,1],[0,1] ] },
+  { color:'#122320', pts:[ [0,0.88],[0.08,0.74],[0.18,0.68],[0.3,0.76],[0.45,0.62],[0.58,0.74],[0.72,0.66],[0.85,0.75],[0.95,0.70],[1,0.85],[1,1],[0,1] ] }
+];
+
+// =============================================
+// SKY GRADIENT STOPS
+// =============================================
+var skyStops = [
+  { p:0.00, top:[26,111,168],   bot:[135,206,235] },
+  { p:0.15, top:[26,111,168],   bot:[135,206,235] },
+  { p:0.35, top:[255,107,53],   bot:[255,209,102] },
+  { p:0.55, top:[139,26,74],    bot:[255,107,53]  },
+  { p:0.75, top:[13,27,75],     bot:[45,58,107]   },
+  { p:1.00, top:[2,8,20],       bot:[13,27,62]    }
+];
+
+function getSkyColors(progress){
+  var i=0;
+  for(;i<skyStops.length-2;i++){
+    if(progress<=skyStops[i+1].p) break;
+  }
+  var s0=skyStops[i], s1=skyStops[i+1];
+  var t = s1.p===s0.p ? 1 : (progress-s0.p)/(s1.p-s0.p);
+  t = clamp(t,0,1);
+  return {
+    top: lerpRGB(s0.top, s1.top, t),
+    bot: lerpRGB(s0.bot, s1.bot, t)
+  };
+}
+
+// =============================================
+// DRAW HELPERS
+// =============================================
+function roundedRect(x,y,w,h,r){
+  r = Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);
+  ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);
+  ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+// =============================================
+// LAYER DRAW FUNCTIONS
+// =============================================
+
+// --- SKY ---
+function drawSky(W,H,progress,cameraX){
+  var sc = getSkyColors(progress);
+  var grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0, rgbStr(sc.top));
+  grad.addColorStop(1, rgbStr(sc.bot));
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+}
+
+// --- SUN ---
+function drawSun(W,H,progress,cameraX){
+  if(progress>0.45) return;
+  var opacity = progress<0.4 ? 1 : 1-sub(progress,0.4,0.45)*1;
+  var sunX = lerp(W*0.82, W*0.18, progress/0.4);
+  var sunY = lerp(H*0.28, H*0.72, progress/0.4);
+  var r = 48;
+  // outer glow
+  ctx.save();
+  ctx.globalAlpha = opacity*0.22;
+  var glow = ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,r*3.2);
+  glow.addColorStop(0,'rgba(255,200,0,0.5)');
+  glow.addColorStop(1,'rgba(255,200,0,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath(); ctx.arc(sunX,sunY,r*3.2,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha = opacity;
+  var sg = ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,r);
+  sg.addColorStop(0,'#FFF5C0');
+  sg.addColorStop(0.5,'#FFD700');
+  sg.addColorStop(1,'#FF8C00');
+  ctx.fillStyle = sg;
+  ctx.beginPath(); ctx.arc(sunX,sunY,r,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+// --- MOON ---
+function drawMoon(W,H,progress){
+  if(progress<0.6) return;
+  var opacity = sub(progress,0.6,0.7);
+  var mx = W*0.78, my = H*0.18, mr=38;
+  ctx.save();
+  ctx.globalAlpha = opacity;
+  for(var gi=3;gi>=1;gi--){
+    ctx.beginPath();
+    ctx.arc(mx,my,mr+gi*22,0,Math.PI*2);
+    ctx.fillStyle = 'rgba(255,253,200,0.055)';
+    ctx.fill();
+  }
+  var mg = ctx.createRadialGradient(mx-10,my-10,0,mx,my,mr);
+  mg.addColorStop(0,'#FFFDE7');
+  mg.addColorStop(1,'#E8E0C0');
+  ctx.fillStyle = mg;
+  ctx.beginPath(); ctx.arc(mx,my,mr,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+// --- STARS ---
+function drawStars(W,H,progress,animTime){
+  if(progress<0.65) return;
+  var opacity = sub(progress,0.65,0.8);
+  ctx.save();
+  for(var i=0;i<stars.length;i++){
+    var s = stars[i];
+    var twinkle = 0.5+0.5*Math.sin(animTime*s.speed+s.phase);
+    var a = opacity * (0.5 + 0.5*twinkle);
+    ctx.globalAlpha = a;
+    if(s.glow){
+      var sg=ctx.createRadialGradient(s.x*W,s.y*H,0,s.x*W,s.y*H,s.r*5);
+      sg.addColorStop(0,'rgba(255,255,255,0.5)');
+      sg.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=sg;
+      ctx.beginPath(); ctx.arc(s.x*W,s.y*H,s.r*5,0,Math.PI*2); ctx.fill();
     }
+    ctx.fillStyle='#ffffff';
+    ctx.beginPath(); ctx.arc(s.x*W,s.y*H,s.r,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
 
-    // Returns 0 to 1 as progress moves from start to end window
-    function windowProgress(progress, start, end) {
-      if (progress < start) return 0;
-      if (progress > end) return 1;
-      return (progress - start) / (end - start);
+// --- CLOUDS ---
+function drawClouds(W,H,progress,cameraX,animTime){
+  if(progress>0.55) return;
+  var opacity = progress<0.45 ? 0.7 : lerp(0.7,0,(progress-0.45)/0.1);
+  var isGolden = progress>0.2 && progress<0.45;
+  ctx.save();
+  for(var i=0;i<clouds.length;i++){
+    var cl = clouds[i];
+    var wx = cl.cx - animTime*cl.speed*60 - cameraX*0.05;
+    wx = ((wx % (W+600)) + W+600)%(W+600) - 200;
+    var wy = cl.cy / 600 * H*0.55;
+    ctx.globalAlpha = opacity * (isGolden ? 0.55 : 1);
+    var col = isGolden ? 'rgba(220,185,155,' : 'rgba(255,255,255,';
+    for(var j=0;j<cl.blobs.length;j++){
+      var b=cl.blobs[j];
+      ctx.fillStyle = col+(opacity*0.65).toFixed(2)+')';
+      ctx.beginPath();
+      ctx.arc(wx+b.dx, wy+b.dy, b.r, 0, Math.PI*2);
+      ctx.fill();
     }
+  }
+  ctx.restore();
+}
 
-    // Fade in from start, fade out at end
-    function fadeInOut(progress, inStart, inEnd, outStart, outEnd) {
-      if (progress < inStart || progress > outEnd) return 0;
-      if (progress >= inEnd && progress <= outStart) return 1;
-      if (progress < inEnd) return windowProgress(progress, inStart, inEnd);
-      return 1 - windowProgress(progress, outStart, outEnd);
+// --- GOD RAYS ---
+function drawGodRays(W,H,progress,cameraX){
+  if(progress<0.2||progress>0.48) return;
+  var opacity = bell(progress,0.2,0.27,0.38,0.48)*0.10;
+  var sunX = lerp(W*0.82, W*0.18, progress/0.4);
+  var sunY = lerp(H*0.28, H*0.72, progress/0.4);
+  ctx.save();
+  ctx.globalAlpha = opacity;
+  for(var r=0;r<7;r++){
+    var ang = -0.55+r*0.18 + Math.sin(animTime*0.3+r)*0.04;
+    var len = H*1.5;
+    var spreadW = 22;
+    ctx.beginPath();
+    ctx.moveTo(sunX,sunY);
+    ctx.lineTo(sunX+Math.cos(ang-0.06)*len, sunY+Math.sin(ang-0.06)*len + spreadW);
+    ctx.lineTo(sunX+Math.cos(ang+0.06)*len, sunY+Math.sin(ang+0.06)*len - spreadW);
+    ctx.closePath();
+    ctx.fillStyle='rgba(255,220,100,0.15)';
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// --- HILLS ---
+function drawHills(W,H,cameraX){
+  var pf = 0.15;
+  var ox = -cameraX*pf;
+  ctx.save();
+  for(var h=0;h<hills.length;h++){
+    var hill = hills[h];
+    ctx.beginPath();
+    var pts = hill.pts;
+    ctx.moveTo(ox + pts[0][0]*W*3.5, pts[0][1]*H);
+    for(var i=1;i<pts.length-2;i++){
+      var px0 = ox + pts[i][0]*W*3.5;
+      var py0 = pts[i][1]*H;
+      var px1 = ox + pts[i+1][0]*W*3.5;
+      var py1 = pts[i+1][1]*H;
+      ctx.quadraticCurveTo(px0,py0,(px0+px1)/2,(py0+py1)/2);
     }
+    var last = pts[pts.length-1];
+    ctx.lineTo(ox+last[0]*W*3.5, last[1]*H);
+    ctx.closePath();
+    ctx.fillStyle = hill.color;
+    ctx.fill();
+  }
+  ctx.restore();
+}
 
-    // Lerp between two color values (returns string)
-    function lerpColor(r1, g1, b1, a1, r2, g2, b2, a2, t) {
-      var r = Math.round(r1 + (r2 - r1) * t);
-      var g = Math.round(g1 + (g2 - g1) * t);
-      var b = Math.round(b1 + (b2 - b1) * t);
-      var a = (a1 + (a2 - a1) * t).toFixed(2);
-      return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+// --- MID TREES ---
+function drawMidTrees(W,H,cameraX){
+  var pf = 0.3;
+  var groundY = H*0.78;
+  ctx.save();
+  for(var i=0;i<midTrees.length;i++){
+    var t = midTrees[i];
+    var sx = t.x - cameraX*pf;
+    if(sx < -t.canopyW-50 || sx > W+t.canopyW+50) continue;
+    var baseY = groundY;
+    // trunk
+    var tg = ctx.createLinearGradient(sx-t.trunkW/2,0,sx+t.trunkW/2,0);
+    tg.addColorStop(0,'#4a3018');
+    tg.addColorStop(0.5,'#6b4a22');
+    tg.addColorStop(1,'#3a2510');
+    ctx.fillStyle=tg;
+    var botW = t.trunkW, topW = t.trunkW*0.55;
+    ctx.beginPath();
+    ctx.moveTo(sx-botW/2,baseY);
+    ctx.lineTo(sx+botW/2,baseY);
+    ctx.lineTo(sx+topW/2,baseY-t.h);
+    ctx.lineTo(sx-topW/2,baseY-t.h);
+    ctx.closePath();
+    ctx.fill();
+    // canopy layers
+    var colors = ['#1a4a1a','#2d6b2d','#3d8b3d','#4aaa4a'];
+    var layerCount = t.layers+1;
+    for(var l=0;l<layerCount;l++){
+      var lc = Math.min(l,colors.length-1);
+      var ly = baseY - t.h + l*12;
+      var lw = t.canopyW*(1-l*0.12);
+      var lh = t.canopyH*(1-l*0.10);
+      ctx.fillStyle = colors[lc];
+      ctx.save();
+      ctx.translate(sx, ly);
+      ctx.scale(1,0.7);
+      ctx.beginPath();
+      ctx.arc(0,0,lw,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
     }
+    // highlight
+    ctx.save();
+    ctx.globalAlpha=0.35;
+    ctx.fillStyle='#6acd6a';
+    ctx.translate(sx-t.canopyW*0.22, baseY-t.h-t.canopyH*0.1);
+    ctx.scale(1,0.6);
+    ctx.beginPath();
+    ctx.arc(0,0,t.canopyW*0.3,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    // vine
+    if(t.vine){
+      ctx.strokeStyle='#1a3a1a';
+      ctx.lineWidth=1.2;
+      ctx.globalAlpha=0.7;
+      ctx.beginPath();
+      ctx.moveTo(sx+t.canopyW*0.4, baseY-t.h+10);
+      ctx.bezierCurveTo(
+        sx+t.canopyW*0.55, baseY-t.h+t.h*0.3,
+        sx+t.canopyW*0.3, baseY-t.h+t.h*0.6,
+        sx+t.canopyW*0.45, baseY
+      );
+      ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+  }
+  ctx.restore();
+}
 
-    // =====================
-    // DAY/NIGHT OVERLAY
-    // =====================
-    function updateOverlay(progress) {
-      var color;
-      if (progress <= 0.2) {
-        // Clear day
-        var t = progress / 0.2;
-        color = lerpColor(135, 206, 235, 0.0, 255, 140, 66, 0.0, t);
-      } else if (progress <= 0.4) {
-        // Golden hour
-        var t = (progress - 0.2) / 0.2;
-        color = lerpColor(255, 140, 66, 0.0, 255, 140, 66, 0.3, t);
-      } else if (progress <= 0.6) {
-        // Sunset red
-        var t = (progress - 0.4) / 0.2;
-        color = lerpColor(255, 140, 66, 0.3, 180, 50, 50, 0.4, t);
-      } else if (progress <= 0.8) {
-        // Dusk blue
-        var t = (progress - 0.6) / 0.2;
-        color = lerpColor(180, 50, 50, 0.4, 20, 20, 80, 0.6, t);
-      } else {
-        // Deep night
-        var t = (progress - 0.8) / 0.2;
-        color = lerpColor(20, 20, 80, 0.6, 5, 5, 20, 0.8, t);
+// --- UNDERGROWTH ---
+function drawUndergrowth(W,H,cameraX){
+  var pf=0.35;
+  var groundY=H*0.78;
+  ctx.save();
+  ctx.globalAlpha=0.8;
+  for(var i=0;i<midTrees.length;i+=2){
+    var t=midTrees[i];
+    var sx=t.x-cameraX*pf;
+    if(sx<-200||sx>W+200) continue;
+    for(var j=-3;j<=3;j++){
+      var px=sx+j*18;
+      var ph=12+seededRand(i*3+j+50)*18;
+      ctx.strokeStyle=j%2===0?'#2a5a1a':'#3a6a22';
+      ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.moveTo(px,groundY);
+      ctx.bezierCurveTo(px-8,groundY-ph*0.6, px+10,groundY-ph*0.8, px-3,groundY-ph);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+// --- FOREGROUND TREES ---
+function drawFgTrees(W,H,cameraX){
+  var pf=0.6;
+  ctx.save();
+  for(var i=0;i<fgTrees.length;i++){
+    var ft=fgTrees[i];
+    var sx=ft.x-cameraX*pf;
+    if(sx<-ft.w-50||sx>W+ft.w+50) continue;
+    var hw=ft.w/2;
+    // bark texture: many vertical stripes
+    var browns=['#1a0e08','#2a1a0e','#221208','#1e1008'];
+    for(var s=0;s<ft.stripes;s++){
+      var bx=sx-hw+s*(ft.w/ft.stripes);
+      ctx.fillStyle=browns[s%browns.length];
+      ctx.fillRect(bx,0, ft.w/ft.stripes+1, H*0.9);
+    }
+    // roots
+    ctx.strokeStyle='#1a0e08';
+    ctx.lineWidth=6;
+    for(var r=0;r<3;r++){
+      var ra=(r-1)*0.5;
+      ctx.beginPath();
+      ctx.moveTo(sx+ra*hw*0.3, H*0.85);
+      ctx.bezierCurveTo(sx+ra*hw+hw*0.3,H*0.88, sx+ra*hw*2+hw*0.5,H*0.9, sx+ra*hw*2.5,H*0.95);
+      ctx.stroke();
+    }
+    // large leaves
+    ctx.globalAlpha=0.85;
+    for(var l=0;l<4;l++){
+      var lx=sx+(seededRand(i*17+l*3+0)-0.5)*ft.w*2.5;
+      var ly=seededRand(i*17+l*3+1)*H*0.5;
+      var lw=30+seededRand(i*17+l*3+2)*60;
+      ctx.fillStyle='#0d2b0d';
+      ctx.save();
+      ctx.translate(lx,ly);
+      ctx.rotate((seededRand(i*17+l*3+3)-0.5)*Math.PI*0.7);
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.bezierCurveTo(lw*0.5,-lw*0.3,lw*0.9,-lw*0.1,lw,0);
+      ctx.bezierCurveTo(lw*0.9,lw*0.2,lw*0.4,lw*0.3,0,0);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalAlpha=1;
+    // ferns at base
+    for(var f=0;f<5;f++){
+      var fx=sx+(seededRand(i*19+f*2+0)-0.5)*ft.w*2;
+      var fy=H*0.8+seededRand(i*19+f*2+1)*H*0.12;
+      ctx.strokeStyle='#1a4a1a';
+      ctx.lineWidth=1;
+      for(var fe=-4;fe<=4;fe++){
+        var fang=(fe/4)*0.8;
+        var fl=15+seededRand(i*19+f*5+fe+10)*25;
+        ctx.beginPath();
+        ctx.moveTo(fx,fy);
+        ctx.bezierCurveTo(
+          fx+Math.cos(fang-1.2)*fl*0.5,fy+Math.sin(fang-1.2)*fl*0.5,
+          fx+Math.cos(fang-1.0)*fl*0.8,fy+Math.sin(fang-1.0)*fl*0.8,
+          fx+Math.cos(fang-0.9)*fl,fy+Math.sin(fang-0.9)*fl
+        );
+        ctx.stroke();
       }
-      colorOverlay.style.background = color;
     }
+  }
+  ctx.restore();
+}
 
-    // =====================
-    // PARALLAX
-    // =====================
-    function updateParallax(scroll) {
-      layerSky.style.transform        = 'translateY(' + (scroll * 0.1) + 'px)';
-      layerJungleFar.style.transform  = 'translateY(' + (scroll * 0.2) + 'px)';
-      layerJungleMid.style.transform  = 'translateY(' + (scroll * 0.35) + 'px)';
-      layerJungleNear.style.transform = 'translateY(' + (scroll * 0.6) + 'px)';
-      layerGround.style.transform     = 'translateY(' + (scroll * 1.0) + 'px)';
+// --- GROUND ---
+function drawGround(W,H,cameraX,animTime){
+  var groundY=H*0.80;
+  // soil strip
+  var sg=ctx.createLinearGradient(0,groundY,0,H);
+  sg.addColorStop(0,'#3d2b1a');
+  sg.addColorStop(0.4,'#5a4020');
+  sg.addColorStop(1,'#3a2a10');
+  ctx.fillStyle=sg;
+  ctx.fillRect(0,groundY,W,H-groundY);
+
+  // grass blades
+  var pf=0.85;
+  ctx.lineWidth=1.2;
+  for(var i=0;i<grassBlades.length;i++){
+    var gb=grassBlades[i];
+    var sx=gb.x-cameraX*pf;
+    if(sx<-20||sx>W+20) continue;
+    var sway=Math.sin(animTime*1.2+gb.x*0.1)*5;
+    ctx.strokeStyle=grassColors[gb.color[0]];
+    ctx.globalAlpha=0.85;
+    ctx.beginPath();
+    ctx.moveTo(sx,groundY);
+    ctx.quadraticCurveTo(sx+sway*0.5,groundY-gb.h*0.6, sx+sway,groundY-gb.h);
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+
+  // rocks
+  for(var i=0;i<rocks.length;i++){
+    var rk=rocks[i];
+    var sx=rk.x-cameraX*pf;
+    if(sx<-60||sx>W+60) continue;
+    var ry=groundY+10+rk.g*25;
+    var rg=ctx.createLinearGradient(sx,ry-20,sx,ry+20);
+    rg.addColorStop(0,'#7a706a');
+    rg.addColorStop(1,'#4a4038');
+    ctx.fillStyle=rg;
+    ctx.beginPath();
+    ctx.moveTo(sx+rk.pts[0][0], ry+rk.pts[0][1]);
+    for(var j=1;j<rk.pts.length;j++){
+      ctx.lineTo(sx+rk.pts[j][0], ry+rk.pts[j][1]);
     }
+    ctx.closePath();
+    ctx.fill();
+  }
 
-    // =====================
-    // ANIMALS
-    // =====================
-    function updateAnimals(progress) {
-      // Deer: 10-20%
-      var deerOpacity = fadeInOut(progress, 0.10, 0.14, 0.16, 0.20);
-      animalDeer.style.opacity = deerOpacity;
+  // leaf litter
+  for(var i=0;i<leaves.length;i++){
+    var lf=leaves[i];
+    var sx=lf.x-cameraX*pf;
+    if(sx<-20||sx>W+20) continue;
+    var ly=groundY+8+lf.dy;
+    ctx.fillStyle=lf.col;
+    ctx.globalAlpha=0.6;
+    ctx.save();
+    ctx.translate(sx+lf.dx,ly);
+    ctx.scale(1,0.5);
+    ctx.beginPath();
+    ctx.arc(0,0,lf.w/2,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.globalAlpha=1;
+}
 
-      // Birds: 22-32%
-      var birdsOpacity = fadeInOut(progress, 0.22, 0.26, 0.28, 0.32);
-      animalBirds.style.opacity = birdsOpacity;
-      if (birdsOpacity > 0.1) {
-        animalBirds.classList.add('visible');
-      } else {
-        animalBirds.classList.remove('visible');
+// --- TRAIN TRACKS ---
+function drawTracks(W,H,cameraX){
+  var trackY1 = H*0.835;
+  var trackY2 = H*0.852;
+  var scrollOffset = -(cameraX*0.9) % 28;
+
+  // ballast (grey dots)
+  ctx.fillStyle='rgba(120,110,100,0.3)';
+  for(var bx=scrollOffset%5;bx<W;bx+=5){
+    var by=trackY1+3+Math.floor(seededRand(bx)*8);
+    ctx.fillRect(bx,by,2,2);
+  }
+
+  // sleepers
+  ctx.fillStyle='#6b5033';
+  var sleeperSpacing=25;
+  for(var sx=scrollOffset;sx<W+sleeperSpacing;sx+=sleeperSpacing){
+    ctx.fillRect(sx-12, trackY1-4, 24, trackY2-trackY1+8);
+  }
+
+  // rails
+  ctx.strokeStyle='#9b8a6a';
+  ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(0,trackY1); ctx.lineTo(W,trackY1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,trackY2); ctx.lineTo(W,trackY2); ctx.stroke();
+}
+
+// --- TRAIN ---
+function drawTrain(W,H,progress,cameraX,animTime){
+  var trainScreenX = W*0.06 + (cameraX*0.02)*0.01;
+  trainScreenX = clamp(trainScreenX, W*0.04, W*0.35);
+  var trainY = H*0.82 + Math.sin(animTime*1.5)*4;
+  var wheelRot = animTime*2.2;
+
+  ctx.save();
+  ctx.translate(trainScreenX, trainY);
+
+  // draw engine
+  drawEngine(0,0,wheelRot);
+
+  // carriages
+  for(var ci=0;ci<3;ci++){
+    var cx = -(230 + ci*175);
+    drawCarriage(cx, 0, wheelRot, ci);
+  }
+
+  // couplers between engine and carriages
+  for(var ci=0;ci<3;ci++){
+    var c1x = ci===0 ? -210 : -(230+(ci-1)*175+155);
+    var c2x = -(230+ci*175);
+    ctx.fillStyle='#555';
+    ctx.fillRect(c2x+155,  -8, c1x-c2x-155+5, 6);
+  }
+
+  ctx.restore();
+}
+
+function drawEngine(ox,oy,wheelRot){
+  // boiler
+  var bg=ctx.createLinearGradient(ox,oy-52,ox,oy-20);
+  bg.addColorStop(0,'#253545');
+  bg.addColorStop(1,'#1a2530');
+  ctx.fillStyle=bg;
+  roundedRect(ox-30,oy-52,160,32,8);
+  ctx.fill();
+
+  // boiler face (front cylinder)
+  ctx.fillStyle='#1a2530';
+  roundedRect(ox+110,oy-48,24,28,6);
+  ctx.fill();
+
+  // body
+  var bbg=ctx.createLinearGradient(ox,oy-70,ox,oy-20);
+  bbg.addColorStop(0,'#3a4a5a');
+  bbg.addColorStop(1,'#2a3540');
+  ctx.fillStyle=bbg;
+  roundedRect(ox-30,oy-70,120,50,6);
+  ctx.fill();
+
+  // cabin
+  ctx.fillStyle='#2a3540';
+  roundedRect(ox-30,oy-95,72,30,4);
+  ctx.fill();
+
+  // cabin window
+  var cwg=ctx.createRadialGradient(ox+5,oy-80,0,ox+5,oy-80,18);
+  cwg.addColorStop(0,'rgba(255,220,130,0.9)');
+  cwg.addColorStop(1,'rgba(180,130,40,0.4)');
+  ctx.fillStyle=cwg;
+  roundedRect(ox-18,oy-90,28,20,3);
+  ctx.fill();
+  roundedRect(ox+18,oy-90,28,20,3);
+  ctx.fill();
+
+  // chimney
+  ctx.fillStyle='#1a2020';
+  ctx.fillRect(ox+72,oy-110,14,44);
+  // chimney cap
+  ctx.fillStyle='#222';
+  roundedRect(ox+68,oy-114,22,7,3);
+  ctx.fill();
+
+  // cowcatcher
+  ctx.fillStyle='#1a2020';
+  ctx.beginPath();
+  ctx.moveTo(ox+130,oy-20);
+  ctx.lineTo(ox+155,oy);
+  ctx.lineTo(ox+130,oy);
+  ctx.closePath();
+  ctx.fill();
+
+  // rivets
+  ctx.fillStyle='#4a5a6a';
+  var rivX=[ox-20,ox,ox+20,ox+40,ox+60,ox+80,ox+100];
+  for(var ri=0;ri<rivX.length;ri++){
+    ctx.beginPath(); ctx.arc(rivX[ri],oy-50,2.5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(rivX[ri],oy-25,2.5,0,Math.PI*2); ctx.fill();
+  }
+
+  // wheels: 3 large wheels
+  var wheelPositions=[ox+20,ox+68,ox+108];
+  for(var wi=0;wi<wheelPositions.length;wi++){
+    drawWheel(wheelPositions[wi], oy, wi===0?20:18, wheelRot);
+  }
+
+  // drive rod (horizontal connecting rod)
+  ctx.strokeStyle='#8a8a8a';
+  ctx.lineWidth=5;
+  ctx.beginPath();
+  ctx.moveTo(ox+20+Math.cos(wheelRot)*18, oy+Math.sin(wheelRot)*18);
+  ctx.lineTo(ox+68+Math.cos(wheelRot)*18, oy+Math.sin(wheelRot)*18);
+  ctx.stroke();
+
+  // steam
+  drawSteam(ox+78, oy-110);
+}
+
+function drawWheel(cx,cy,r,rot){
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.ellipse(cx,cy+r,r*1.1,r*0.25,0,0,Math.PI*2); ctx.fill();
+  // outer
+  var wg=ctx.createRadialGradient(cx-r*0.3,cy-r*0.3,0,cx,cy,r);
+  wg.addColorStop(0,'#3a3a3a');
+  wg.addColorStop(1,'#111');
+  ctx.fillStyle=wg;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+  // silver rim
+  ctx.strokeStyle='#8a8a8a';
+  ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+  // spokes
+  ctx.strokeStyle='#555';
+  ctx.lineWidth=2;
+  for(var s=0;s<8;s++){
+    var a=rot+s*(Math.PI/4);
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+Math.cos(a)*(r-3), cy+Math.sin(a)*(r-3));
+    ctx.stroke();
+  }
+  // hub
+  ctx.fillStyle='#888';
+  ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2); ctx.fill();
+}
+
+var smokePool = [];
+for(var si=0;si<15;si++){
+  smokePool.push({ x:0,y:0,vx:0.4+si*0.1,vy:-(0.4+si*0.15),op:0,sz:0,age:0,active:false });
+}
+var smokeTimer=0;
+function drawSteam(ex,ey){
+  smokeTimer++;
+  if(smokeTimer%4===0){
+    for(var pi=0;pi<smokePool.length;pi++){
+      if(!smokePool[pi].active){
+        smokePool[pi].x=ex+(Math.random()-0.5)*6;
+        smokePool[pi].y=ey;
+        smokePool[pi].vx=0.5+(Math.random()-0.5)*0.4;
+        smokePool[pi].vy=-0.9-Math.random()*0.6;
+        smokePool[pi].op=0.7;
+        smokePool[pi].sz=5+Math.random()*4;
+        smokePool[pi].active=true;
+        break;
       }
-
-      // Elephant: 35-45%
-      var elephantOpacity = fadeInOut(progress, 0.35, 0.39, 0.41, 0.45);
-      animalElephant.style.opacity = elephantOpacity;
-
-      // Tiger: 48-57%
-      var tigerOpacity = fadeInOut(progress, 0.48, 0.52, 0.53, 0.57);
-      animalTiger.style.opacity = tigerOpacity;
-
-      // Fireflies: 55-68%  (max opacity 0.4)
-      var firefliesOpacity = fadeInOut(progress, 0.55, 0.60, 0.64, 0.68) * 0.4;
-      animalFireflies.style.opacity = firefliesOpacity;
-
-      // Owl: 65-75%
-      var owlOpacity = fadeInOut(progress, 0.65, 0.69, 0.71, 0.75);
-      animalOwl.style.opacity = owlOpacity;
-
-      // Wolf: 77-87%
-      var wolfOpacity = fadeInOut(progress, 0.77, 0.81, 0.83, 0.87);
-      animalWolf.style.opacity = wolfOpacity;
-
-      // Fox: 88-95%
-      var foxOpacity = fadeInOut(progress, 0.88, 0.91, 0.93, 0.95);
-      animalFox.style.opacity = foxOpacity;
     }
+  }
+  for(var pi=0;pi<smokePool.length;pi++){
+    var p=smokePool[pi];
+    if(!p.active) continue;
+    p.x+=p.vx; p.y+=p.vy;
+    p.op-=0.012; p.sz+=0.4;
+    if(p.op<=0){ p.active=false; continue; }
+    ctx.globalAlpha=p.op;
+    ctx.fillStyle='rgba(200,200,210,1)';
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.sz,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
 
-    // =====================
-    // TEXT OVERLAYS
-    // =====================
-    function updateText(progress) {
-      // "All aboard." 0-8%
-      textAboard.style.opacity  = fadeInOut(progress, 0.00, 0.02, 0.06, 0.08);
-      // "The jungle breathes." 28-38%
-      textJungle.style.opacity  = fadeInOut(progress, 0.28, 0.31, 0.35, 0.38);
-      // "Night falls slowly." 58-68%
-      textNight.style.opacity   = fadeInOut(progress, 0.58, 0.61, 0.65, 0.68);
-      // "Some journeys never end." 90-100%
-      textJourney.style.opacity = fadeInOut(progress, 0.90, 0.93, 0.97, 1.00);
-    }
+function drawCarriage(ox,oy,wheelRot,idx){
+  var colors=['#2e3e50','#2a3a4a','#26363e'];
+  var bodyColor=colors[idx%colors.length];
+  // body
+  ctx.fillStyle=bodyColor;
+  roundedRect(ox,oy-65,155,50,5);
+  ctx.fill();
+  // windows
+  for(var wi=0;wi<3;wi++){
+    var wg=ctx.createRadialGradient(ox+22+wi*44,oy-42,0,ox+22+wi*44,oy-42,14);
+    wg.addColorStop(0,'rgba(255,215,100,0.85)');
+    wg.addColorStop(1,'rgba(160,100,20,0.3)');
+    ctx.fillStyle=wg;
+    roundedRect(ox+10+wi*44,oy-55,28,22,3);
+    ctx.fill();
+  }
+  // undercarriage
+  ctx.fillStyle='#1a2530';
+  ctx.fillRect(ox+8,oy-18,139,8);
+  // 4 wheels
+  var cwp=[ox+25,ox+65,ox+100,ox+138];
+  for(var wi=0;wi<cwp.length;wi++){
+    drawWheel(cwp[wi],oy,14,wheelRot+(wi%2===0?0:Math.PI));
+  }
+}
 
-    // =====================
-    // MAIN ANIMATION LOOP
-    // =====================
-    function animate() {
-      // Smooth lerp toward target scroll
-      currentScroll += (targetScroll - currentScroll) * 0.08;
+// --- RAIN ---
+function drawRain(W,H,progress,animTime){
+  if(progress<0.38||progress>0.54) return;
+  var intensity = bell(progress,0.38,0.44,0.48,0.54);
+  var ang=0.27; // ~15 degrees
+  ctx.save();
+  ctx.globalAlpha=intensity*0.45;
+  ctx.strokeStyle='rgba(180,200,255,1)';
+  ctx.lineWidth=1;
+  for(var i=0;i<150;i++){
+    var rp=rainDrops[i];
+    rp.x += Math.sin(ang)*4;
+    rp.y += 9;
+    if(rp.y>H){ rp.y-=H+20; rp.x=Math.random()*W; }
+    if(rp.x>W){ rp.x-=W; }
+    var len=15;
+    ctx.beginPath();
+    ctx.moveTo(rp.x,rp.y);
+    ctx.lineTo(rp.x+Math.sin(ang)*len, rp.y+Math.cos(ang)*len);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
 
-      var maxScroll = document.body.scrollHeight - window.innerHeight;
-      var progress  = maxScroll > 0 ? clamp(currentScroll / maxScroll, 0, 1) : 0;
+// --- MIST ---
+function drawMist(W,H,progress){
+  var inRange  = progress<0.22;
+  var outRange = progress>0.68;
+  if(!inRange && !outRange) return;
+  var opacity = inRange ? sub(0.22-progress,0,0.22)*0.7 : sub(progress,0.68,1.0)*0.7;
+  ctx.save();
+  for(var b=0;b<3;b++){
+    var by = H*(0.55+b*0.12);
+    var mg=ctx.createLinearGradient(0,by-30,0,by+30);
+    mg.addColorStop(0,'rgba(200,220,255,0)');
+    mg.addColorStop(0.5,'rgba(200,220,255,'+(opacity*0.07).toFixed(3)+')');
+    mg.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=mg;
+    ctx.fillRect(0,by-30,W,60);
+  }
+  ctx.restore();
+}
 
-      updateParallax(currentScroll);
-      updateOverlay(progress);
-      updateAnimals(progress);
-      updateText(progress);
+// --- FIREFLY AMBIENT GLOW ---
+function drawFireflyGlow(W,H,progress){
+  if(progress<0.54||progress>0.72) return;
+  var op=bell(progress,0.54,0.60,0.67,0.72)*0.12;
+  ctx.save();
+  var fg=ctx.createLinearGradient(0,H*0.5,0,H);
+  fg.addColorStop(0,'rgba(100,200,80,0)');
+  fg.addColorStop(1,'rgba(80,180,60,'+op.toFixed(3)+')');
+  ctx.fillStyle=fg;
+  ctx.fillRect(0,H*0.5,W,H*0.5);
+  ctx.restore();
+}
 
-      requestAnimationFrame(animate);
-    }
+// --- FIREFLIES ---
+function drawFireflies(W,H,progress,cameraX,animTime){
+  if(progress<0.54||progress>0.67) return;
+  var opacity=bell(progress,0.54,0.60,0.63,0.67);
+  var pf=0.45;
+  ctx.save();
+  for(var i=0;i<fireflies.length;i++){
+    var ff=fireflies[i];
+    var blink=Math.sin(animTime*ff.blinkSpeed+ff.blinkPhase);
+    if(blink<0.3) continue;
+    var blinkOp=blink*opacity;
+    var fx=ff.bx - cameraX*pf + Math.cos(animTime*ff.fr+ff.fx)*40;
+    var fy=ff.by*H + Math.sin(animTime*ff.fr*0.7+ff.fy)*25;
+    if(fx<0||fx>W) continue;
+    // glow halo
+    ctx.globalAlpha=blinkOp*0.35;
+    var fg=ctx.createRadialGradient(fx,fy,0,fx,fy,14);
+    fg.addColorStop(0,'rgba(170,255,68,0.6)');
+    fg.addColorStop(1,'rgba(170,255,68,0)');
+    ctx.fillStyle=fg;
+    ctx.beginPath(); ctx.arc(fx,fy,14,0,Math.PI*2); ctx.fill();
+    // core dot
+    ctx.globalAlpha=blinkOp;
+    ctx.fillStyle='#aaff44';
+    ctx.beginPath(); ctx.arc(fx,fy,2.5,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
 
-    animate();
-  </script>
+// =============================================
+// ANIMAL DRAW FUNCTIONS
+// =============================================
+
+// --- DEER ---
+function drawDeer(W,H,progress,cameraX){
+  var op=bell(progress,0.08,0.11,0.15,0.18);
+  if(op<0.01) return;
+  var pf=0.35;
+  var wx=2200-cameraX*pf;
+  var wy=H*0.80;
+  var breathe=Math.sin(animTime*0.8)*0.012;
+  ctx.save();
+  ctx.globalAlpha=op;
+  ctx.translate(wx,wy);
+  ctx.scale(1,1+breathe);
+  // body
+  ctx.fillStyle='#8B6914';
+  ctx.save();
+  ctx.scale(1,0.6);
+  ctx.beginPath(); ctx.arc(0,-28,35,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // belly darker
+  ctx.fillStyle='#6a4e10';
+  ctx.save(); ctx.scale(1,0.4);
+  ctx.beginPath(); ctx.arc(5,-15,22,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // neck
+  ctx.fillStyle='#8B6914';
+  ctx.beginPath();
+  ctx.moveTo(-12,-48);
+  ctx.bezierCurveTo(-18,-65,-10,-80,-5,-85);
+  ctx.bezierCurveTo(2,-80,5,-65,2,-48);
+  ctx.closePath(); ctx.fill();
+  // head
+  ctx.fillStyle='#8B6914';
+  ctx.beginPath(); ctx.ellipse(-3,-88,14,11,0.2,0,Math.PI*2); ctx.fill();
+  // ear
+  ctx.fillStyle='#a07820';
+  ctx.save(); ctx.translate(-16,-88);
+  ctx.scale(1,1.6);
+  ctx.beginPath(); ctx.ellipse(0,0,6,4,0.5,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // nose
+  ctx.fillStyle='#5a3a08';
+  ctx.beginPath(); ctx.ellipse(10,-87,4,3,0,0,Math.PI*2); ctx.fill();
+  // eye
+  ctx.fillStyle='#1a0a00';
+  ctx.beginPath(); ctx.arc(2,-92,2.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(3,-93,1,0,Math.PI*2); ctx.fill();
+  // tail
+  ctx.fillStyle='#fff';
+  ctx.save(); ctx.scale(1,0.7);
+  ctx.beginPath(); ctx.ellipse(-34,-22,6,8,0.3,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // antlers
+  ctx.strokeStyle='#5a3a08';
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(-8,-96);
+  ctx.bezierCurveTo(-18,-115,-25,-125,-22,-138);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-8,-96);
+  ctx.bezierCurveTo(5,-112,8,-120,4,-130);
+  ctx.stroke();
+  ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(-22,-138); ctx.lineTo(-30,-148); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-22,-138); ctx.lineTo(-16,-150); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(4,-130); ctx.lineTo(-3,-142); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(4,-130); ctx.lineTo(10,-140); ctx.stroke();
+  // legs (grazing: head tilted down already via translate)
+  ctx.fillStyle='#7a5810';
+  var legXs=[-22,-8,8,22];
+  for(var li=0;li<legXs.length;li++){
+    ctx.fillRect(legXs[li]-4,-10,8,42);
+  }
+  // hooves
+  ctx.fillStyle='#2a1a00';
+  for(var li=0;li<legXs.length;li++){
+    ctx.fillRect(legXs[li]-4,30,8,6);
+  }
+  ctx.restore();
+}
+
+// --- BIRDS ---
+function drawBirds(W,H,progress){
+  var op=bell(progress,0.20,0.23,0.27,0.30);
+  if(op<0.01) return;
+  ctx.save();
+  ctx.globalAlpha=op;
+  var flockX = W*0.72 - (animTime*0.8*60)%( W+300 );
+  var flockY = H*0.18;
+  for(var i=0;i<birds.length;i++){
+    var bd=birds[i];
+    var bx=flockX + bd.ox + (i%3)*30;
+    var by=flockY + bd.oy - Math.floor(i/3)*25;
+    var wa=Math.sin(animTime*4+bd.phase)*0.6;
+    var sz=bd.size;
+    ctx.strokeStyle='#1a1a2a';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(bx,by);
+    ctx.bezierCurveTo(bx-sz*0.8,by-sz*0.6+wa*sz, bx-sz*1.4,by+wa*sz*0.5, bx-sz*2,by);
+    ctx.moveTo(bx,by);
+    ctx.bezierCurveTo(bx+sz*0.8,by-sz*0.6+wa*sz, bx+sz*1.4,by+wa*sz*0.5, bx+sz*2,by);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// --- ELEPHANT ---
+function drawElephant(W,H,progress,cameraX){
+  var op=bell(progress,0.33,0.36,0.40,0.43);
+  if(op<0.01) return;
+  var pf=0.35;
+  var wx=8500-cameraX*pf;
+  var wy=H*0.82;
+  var legWalk=Math.sin(animTime*0.8)*8;
+  ctx.save();
+  ctx.globalAlpha=op;
+  ctx.translate(wx,wy);
+  // body
+  ctx.fillStyle='#5a5a62';
+  ctx.save(); ctx.scale(1,0.7);
+  ctx.beginPath(); ctx.arc(0,-50,65,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // head
+  ctx.fillStyle='#5a5a62';
+  ctx.beginPath(); ctx.ellipse(60,-62,40,36,0,0,Math.PI*2); ctx.fill();
+  // ears (large)
+  ctx.fillStyle='#4a4a52';
+  ctx.save(); ctx.translate(60,-62);
+  ctx.scale(1,1.3);
+  ctx.beginPath(); ctx.ellipse(20,5,28,22,0.3,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle='#5a5a62';
+  ctx.save(); ctx.translate(60,-62);
+  ctx.beginPath(); ctx.ellipse(18,4,20,16,0.2,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // trunk
+  ctx.strokeStyle='#5a5a62';
+  ctx.lineWidth=14;
+  ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(95,-50);
+  ctx.bezierCurveTo(115,-30,110,15,95,35);
+  ctx.stroke();
+  // tusk
+  ctx.strokeStyle='#f5f0e0';
+  ctx.lineWidth=5;
+  ctx.beginPath();
+  ctx.moveTo(85,-52);
+  ctx.bezierCurveTo(100,-45,108,-35,115,-28);
+  ctx.stroke();
+  // eye
+  ctx.fillStyle='#1a1a1a';
+  ctx.beginPath(); ctx.arc(80,-68,5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(81,-69,2,0,Math.PI*2); ctx.fill();
+  // tail
+  ctx.strokeStyle='#4a4a52';
+  ctx.lineWidth=5;
+  ctx.beginPath();
+  ctx.moveTo(-62,-40);
+  ctx.bezierCurveTo(-80,-25,-78,5,-72,20);
+  ctx.stroke();
+  // legs
+  ctx.fillStyle='#4a4a52';
+  var legXs=[-35,-10,15,38];
+  for(var li=0;li<legXs.length;li++){
+    var lsway = (li%2===0)?legWalk:-legWalk;
+    ctx.save();
+    ctx.translate(legXs[li],0);
+    roundedRect(-12,-5+lsway,24,55,6);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+// --- TIGER ---
+function drawTiger(W,H,progress,cameraX){
+  var op=bell(progress,0.46,0.49,0.53,0.56);
+  if(op<0.01) return;
+  var pf=0.55;
+  // pick a foreground tree to peek from
+  var ft=fgTrees[6];
+  var sx=ft.x - cameraX*pf;
+  var peek=Math.sin(animTime*0.7)*12;
+  var tx=sx - ft.w*0.5 - 45 + peek;
+  var ty=H*0.62;
+  ctx.save();
+  ctx.globalAlpha=op;
+  ctx.translate(tx,ty);
+  // body (partially visible)
+  ctx.fillStyle='#C4600A';
+  ctx.save(); ctx.scale(1.3,1);
+  ctx.beginPath(); ctx.arc(0,30,32,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // head
+  ctx.fillStyle='#C4600A';
+  ctx.beginPath(); ctx.arc(0,0,38,0,Math.PI*2); ctx.fill();
+  // stripes on face
+  ctx.strokeStyle='#2a1a00';
+  ctx.lineWidth=3.5;
+  var stripes=[
+    [[-20,-15],[-12,-28]],
+    [[-16,5],[-6,-10]],
+    [[16,-15],[8,-28]],
+    [[12,5],[4,-10]],
+    [[-8,-30],[8,-30]]
+  ];
+  for(var si=0;si<stripes.length;si++){
+    ctx.beginPath();
+    ctx.moveTo(stripes[si][0][0],stripes[si][0][1]);
+    ctx.lineTo(stripes[si][1][0],stripes[si][1][1]);
+    ctx.stroke();
+  }
+  // ears
+  ctx.fillStyle='#C4600A';
+  ctx.beginPath(); ctx.moveTo(-28,-28); ctx.lineTo(-20,-50); ctx.lineTo(-10,-28); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(28,-28); ctx.lineTo(20,-50); ctx.lineTo(10,-28); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#3a1a0a';
+  ctx.beginPath(); ctx.moveTo(-25,-30); ctx.lineTo(-20,-44); ctx.lineTo(-13,-30); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(25,-30); ctx.lineTo(20,-44); ctx.lineTo(13,-30); ctx.closePath(); ctx.fill();
+  // eyes (green-yellow)
+  ctx.fillStyle='#c8c820';
+  ctx.beginPath(); ctx.ellipse(-14,-5,9,7,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(14,-5,9,7,0,0,Math.PI*2); ctx.fill();
+  // pupils (slit)
+  ctx.fillStyle='#1a1a00';
+  ctx.beginPath(); ctx.ellipse(-14,-5,2,7,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(14,-5,2,7,0,0,Math.PI*2); ctx.fill();
+  // nose
+  ctx.fillStyle='#1a0a00';
+  ctx.beginPath(); ctx.ellipse(0,8,5,4,0,0,Math.PI*2); ctx.fill();
+  // whiskers
+  ctx.strokeStyle='rgba(220,200,180,0.8)';
+  ctx.lineWidth=1;
+  for(var w=0;w<3;w++){
+    var wy=w*5+4;
+    ctx.beginPath(); ctx.moveTo(-6,wy); ctx.lineTo(-38,wy+w*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(6,wy); ctx.lineTo(38,wy+w*2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// --- OWL ---
+function drawOwl(W,H,progress,cameraX){
+  var op=bell(progress,0.64,0.67,0.71,0.74);
+  if(op<0.01) return;
+  var headTurn=Math.sin(animTime*0.5)*0.35;
+  var ox=W*0.78, oy=H*0.25;
+  ctx.save();
+  ctx.globalAlpha=op;
+  // branch
+  ctx.fillStyle='#4a3018';
+  roundedRect(ox-80,oy+48,180,14,5);
+  ctx.fill();
+  ctx.strokeStyle='#3a2010';
+  ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(ox-80,oy+48); ctx.lineTo(ox+100,oy+55); ctx.stroke();
+  // body
+  ctx.fillStyle='#3a2a1a';
+  ctx.save(); ctx.translate(ox,oy+20); ctx.scale(1,1.4);
+  ctx.beginPath(); ctx.arc(0,0,26,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // wing feathers
+  ctx.strokeStyle='#2a1a0a';
+  ctx.lineWidth=1.5;
+  for(var fw=0;fw<5;fw++){
+    var fa=-0.6+fw*0.28;
+    ctx.beginPath();
+    ctx.moveTo(ox-8,oy+30);
+    ctx.bezierCurveTo(ox-28+fw*2,oy+35,ox-30+fw*2,oy+42,ox-25+fw*2,oy+48);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(ox+8,oy+30);
+    ctx.bezierCurveTo(ox+28-fw*2,oy+35,ox+30-fw*2,oy+42,ox+25-fw*2,oy+48);
+    ctx.stroke();
+  }
+  // head with rotation
+  ctx.save();
+  ctx.translate(ox,oy-2);
+  ctx.rotate(headTurn);
+  ctx.fillStyle='#3a2a1a';
+  ctx.beginPath(); ctx.arc(0,0,22,0,Math.PI*2); ctx.fill();
+  // ear tufts
+  ctx.fillStyle='#2a1a08';
+  ctx.beginPath(); ctx.moveTo(-12,-18); ctx.lineTo(-18,-36); ctx.lineTo(-5,-18); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(12,-18); ctx.lineTo(18,-36); ctx.lineTo(5,-18); ctx.closePath(); ctx.fill();
+  // face disc
+  ctx.fillStyle='#6a5030';
+  ctx.beginPath(); ctx.arc(0,2,16,0,Math.PI*2); ctx.fill();
+  // eyes
+  ctx.fillStyle='#e0c030';
+  ctx.beginPath(); ctx.arc(-8,0,8,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(8,0,8,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#1a1000';
+  ctx.beginPath(); ctx.arc(-8,0,4.5,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(8,0,4.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(-6,-2,1.5,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(10,-2,1.5,0,Math.PI*2); ctx.fill();
+  // beak
+  ctx.fillStyle='#c0a020';
+  ctx.beginPath(); ctx.moveTo(-3,8); ctx.lineTo(3,8); ctx.lineTo(0,15); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.restore();
+}
+
+// --- WOLF ---
+function drawWolf(W,H,progress,cameraX){
+  var op=bell(progress,0.76,0.79,0.83,0.86);
+  if(op<0.01) return;
+  var pf=0.15;
+  var wx=11800-cameraX*pf;
+  var wy=H*0.65;
+  ctx.save();
+  ctx.globalAlpha=op;
+  ctx.translate(wx,wy);
+  // body silhouette
+  ctx.fillStyle='#2a2a3a';
+  // body
+  ctx.beginPath();
+  ctx.ellipse(-10,-30,35,22,0.15,0,Math.PI*2); ctx.fill();
+  // hind legs
+  ctx.fillRect(-40,-15,12,45);
+  ctx.fillRect(-25,-15,12,45);
+  // front legs
+  ctx.fillRect(10,-15,12,45);
+  ctx.fillRect(25,-15,12,45);
+  // neck
+  ctx.beginPath();
+  ctx.moveTo(12,-44);
+  ctx.bezierCurveTo(18,-68,22,-80,20,-90);
+  ctx.bezierCurveTo(14,-80,10,-68,8,-44);
+  ctx.closePath(); ctx.fill();
+  // head (looking up/howling)
+  ctx.beginPath(); ctx.ellipse(14,-100,18,15,0.5,0,Math.PI*2); ctx.fill();
+  // snout open
+  ctx.beginPath();
+  ctx.moveTo(14,-90); ctx.lineTo(30,-82); ctx.lineTo(26,-96); ctx.closePath(); ctx.fill();
+  // mouth open area
+  ctx.fillStyle='#1a1020';
+  ctx.beginPath(); ctx.moveTo(18,-90); ctx.lineTo(30,-83); ctx.lineTo(20,-86); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#2a2a3a';
+  // ears
+  ctx.beginPath(); ctx.moveTo(6,-110); ctx.lineTo(0,-130); ctx.lineTo(14,-112); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(22,-110); ctx.lineTo(28,-130); ctx.lineTo(16,-112); ctx.closePath(); ctx.fill();
+  // tail up
+  ctx.strokeStyle='#2a2a3a';
+  ctx.lineWidth=8;
+  ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-42,-14);
+  ctx.bezierCurveTo(-65,-10,-75,-30,-70,-52);
+  ctx.stroke();
+  // fur texture strokes
+  ctx.strokeStyle='#3a3a4a';
+  ctx.lineWidth=1.2;
+  for(var fi=0;fi<12;fi++){
+    var fang=-1.2+fi*0.22;
+    var fr=25+seededRand(fi*7)*12;
+    ctx.beginPath();
+    ctx.moveTo(-10+Math.cos(fang)*fr,-30+Math.sin(fang)*fr);
+    ctx.lineTo(-10+Math.cos(fang)*(fr+6),-30+Math.sin(fang)*(fr+6));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// --- FOX ---
+function drawFox(W,H,progress){
+  var op=bell(progress,0.87,0.90,0.93,0.95);
+  if(op<0.01) return;
+  var foxX = ((animTime*0.8*60) % (W+200)) - 200;
+  var runCycle=Math.sin(animTime*5.5);
+  var foxY=H*0.83;
+  ctx.save();
+  ctx.globalAlpha=op;
+  ctx.translate(foxX,foxY);
+  // body stretched in run
+  ctx.fillStyle='#C4501A';
+  ctx.save(); ctx.scale(1.6,0.7);
+  ctx.beginPath(); ctx.arc(0,-18,28,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // chest (white)
+  ctx.fillStyle='#f0ead0';
+  ctx.save(); ctx.scale(0.8,0.5);
+  ctx.beginPath(); ctx.arc(15,-18,18,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // head
+  ctx.fillStyle='#C4501A';
+  ctx.beginPath(); ctx.ellipse(42,-24,18,14,0.1,0,Math.PI*2); ctx.fill();
+  // snout
+  ctx.fillStyle='#a03a12';
+  ctx.beginPath(); ctx.ellipse(56,-22,10,7,0,0,Math.PI*2); ctx.fill();
+  // nose
+  ctx.fillStyle='#1a0a00';
+  ctx.beginPath(); ctx.arc(64,-22,3,0,Math.PI*2); ctx.fill();
+  // ear
+  ctx.fillStyle='#C4501A';
+  ctx.beginPath(); ctx.moveTo(35,-34); ctx.lineTo(28,-52); ctx.lineTo(44,-34); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(48,-34); ctx.lineTo(44,-52); ctx.lineTo(56,-34); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#f5a0a0';
+  ctx.beginPath(); ctx.moveTo(37,-34); ctx.lineTo(30,-48); ctx.lineTo(42,-34); ctx.closePath(); ctx.fill();
+  // eye
+  ctx.fillStyle='#1a1a00';
+  ctx.beginPath(); ctx.arc(48,-26,3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(49,-27,1.2,0,Math.PI*2); ctx.fill();
+  // legs (alternating run)
+  ctx.fillStyle='#1a0a00';
+  var lc=runCycle;
+  ctx.fillRect(-28+lc*12,-10,10,32);
+  ctx.fillRect(-10-lc*12,-10,10,32);
+  ctx.fillRect(12+lc*10,-10,10,32);
+  ctx.fillRect(28-lc*10,-10,10,32);
+  // bushy tail
+  ctx.fillStyle='#C4501A';
+  ctx.beginPath();
+  ctx.moveTo(-40,-15);
+  ctx.bezierCurveTo(-75,-12,-90,-5,-88,8);
+  ctx.bezierCurveTo(-88,20,-72,18,-55,10);
+  ctx.bezierCurveTo(-45,5,-38,-2,-40,-15);
+  ctx.fill();
+  // tail tip white
+  ctx.fillStyle='#f5f0e8';
+  ctx.beginPath(); ctx.arc(-83,8,9,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+// --- TEXT ---
+function drawText(W,H,progress){
+  var texts=[
+    { text:'All aboard.',        op:bell(progress,0.00,0.01,0.04,0.07), cx:W/2, cy:H/2 },
+    { text:'The jungle breathes.',op:bell(progress,0.27,0.30,0.34,0.37), cx:W/2, cy:H*0.46 },
+    { text:'Night falls slowly.', op:bell(progress,0.57,0.60,0.64,0.67), cx:W/2, cy:H*0.44 },
+    { text:'Some journeys never end.', op:progress>0.9 ? sub(progress,0.9,1.0) : 0, cx:W/2, cy:H/2 }
+  ];
+  ctx.save();
+  var sz=Math.min(W*0.048, 52);
+  ctx.font='600 '+sz+'px Georgia, serif';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  for(var i=0;i<texts.length;i++){
+    var t=texts[i];
+    if(t.op<0.01) continue;
+    ctx.globalAlpha=t.op;
+    ctx.shadowBlur=20;
+    ctx.shadowColor='rgba(0,0,0,0.8)';
+    ctx.fillStyle='#ffffff';
+    ctx.fillText(t.text, t.cx, t.cy);
+  }
+  ctx.shadowBlur=0;
+  ctx.restore();
+}
+
+// --- VIGNETTE ---
+function drawVignette(W,H){
+  var vg=ctx.createRadialGradient(W/2,H/2,H*0.25,W/2,H/2,H*0.78);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(0.6,'rgba(0,0,0,0.15)');
+  vg.addColorStop(1,'rgba(0,0,0,0.65)');
+  ctx.fillStyle=vg;
+  ctx.fillRect(0,0,W,H);
+}
+
+// =============================================
+// MAIN ANIMATION LOOP
+// =============================================
+function tick(){
+  // lerp scroll
+  currentScroll += (targetScroll - currentScroll)*0.06;
+  maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  if(maxScroll<=0) maxScroll=17800;
+  var progress = clamp(currentScroll/maxScroll, 0, 1);
+  var cameraX  = progress * 16000;
+
+  animTime += 0.016;
+
+  var W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // 1. SKY
+  drawSky(W,H,progress,cameraX);
+  drawSun(W,H,progress,cameraX);
+  drawGodRays(W,H,progress,cameraX);
+  drawMoon(W,H,progress);
+  drawStars(W,H,progress,animTime);
+  drawClouds(W,H,progress,cameraX,animTime);
+  drawMist(W,H,progress);
+
+  // 2. HILLS
+  drawHills(W,H,cameraX);
+
+  // 3. MID JUNGLE
+  drawMidTrees(W,H,cameraX);
+  drawUndergrowth(W,H,cameraX);
+
+  // 4. ANIMALS (mid-ground)
+  drawDeer(W,H,progress,cameraX);
+  drawBirds(W,H,progress);
+  drawElephant(W,H,progress,cameraX);
+
+  // 5. FOREGROUND JUNGLE
+  drawFgTrees(W,H,cameraX);
+
+  // 6. TIGER (peek from fg tree)
+  drawTiger(W,H,progress,cameraX);
+
+  // 7. GROUND
+  drawGround(W,H,cameraX,animTime);
+
+  // 8. TRACKS
+  drawTracks(W,H,cameraX);
+
+  // 9. TRAIN
+  drawTrain(W,H,progress,cameraX,animTime);
+
+  // 10. ANIMALS (atmosphere)
+  drawFireflyGlow(W,H,progress);
+  drawFireflies(W,H,progress,cameraX,animTime);
+  drawOwl(W,H,progress,cameraX);
+  drawWolf(W,H,progress,cameraX);
+  drawFox(W,H,progress);
+
+  // 11. RAIN
+  drawRain(W,H,progress,animTime);
+
+  // 12. TEXT
+  drawText(W,H,progress);
+
+  // 13. VIGNETTE (always on top)
+  drawVignette(W,H);
+
+  requestAnimationFrame(tick);
+}
+
+requestAnimationFrame(tick);
+
+})();
+</script>
 </body>
 </html>
